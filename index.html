@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>QuantumServe ERP</title>
+<link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96x96.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QuantumServe">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0d0d0f;
+  --bg2:       #141416;
+  --bg3:       #1a1a1e;
+  --bg4:       #202025;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.14);
+  --gold:      #d4a843;
+  --gold2:     #f0c870;
+  --gold-dim:  rgba(212,168,67,0.12);
+  --gold-glow: rgba(212,168,67,0.06);
+  --text:      #f0eee8;
+  --text2:     rgba(240,238,232,0.6);
+  --text3:     rgba(240,238,232,0.3);
+  --text4:     rgba(240,238,232,0.15);
+  --green:     #3ecf8e;
+  --green-dim: rgba(62,207,142,0.1);
+  --red:       #f87171;
+  --red-dim:   rgba(248,113,113,0.1);
+  --amber:     #fbbf24;
+  --amber-dim: rgba(251,191,36,0.1);
+  --blue:      #60a5fa;
+  --blue-dim:  rgba(96,165,250,0.1);
+  --r:         12px;
+  --r2:        18px;
+  --sidebar:   240px;
+  --topbar:    60px;
+  --ease:      cubic-bezier(0.4,0,0.2,1);
+}
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:'Outfit',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ══ SIDEBAR ══ */
+#sidebar {
+  position:fixed; top:0; left:0;
+  width:var(--sidebar); height:100vh;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  z-index:300;
+  transition:transform 0.32s var(--ease);
+}
+
+.sidebar-top {
+  padding:0 16px;
+  height:var(--topbar);
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+
+.logo-mark {
+  width:34px; height:34px;
+  border-radius:10px;
+  overflow:hidden;
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.logo-mark img { width:100%; height:100%; object-fit:cover; }
+
+.logo-text {
+  font-family:'Playfair Display',serif;
+  font-size:15px; font-weight:600;
+  letter-spacing:0.01em;
+  line-height:1.1;
+}
+.logo-sub {
+  font-size:9px; color:var(--text3);
+  letter-spacing:0.1em; text-transform:uppercase;
+  margin-top:1px;
+}
+
+.business-chip {
+  margin:12px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 12px;
+  cursor:pointer;
+  transition:border-color 0.2s;
+  flex-shrink:0;
+}
+.business-chip:hover { border-color:var(--gold-dim); }
+.business-name { font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.business-type { font-size:10px; color:var(--text3); margin-top:1px; letter-spacing:0.04em; }
+
+nav { flex:1; overflow-y:auto; padding:4px 8px; }
+
+.nav-section {
+  font-size:9px; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--text4); padding:14px 10px 5px; font-weight:600;
+}
+
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 10px; border-radius:9px;
+  cursor:pointer; font-size:13px; font-weight:500;
+  color:var(--text2);
+  transition:all 0.18s var(--ease);
+  position:relative;
+  user-select:none;
+}
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active {
+  background:var(--gold-dim);
+  color:var(--gold);
+  border:1px solid rgba(212,168,67,0.18);
+}
+.nav-item.active::before {
+  content:'';
+  position:absolute; left:-8px; top:50%;
+  transform:translateY(-50%);
+  width:3px; height:18px;
+  background:var(--gold);
+  border-radius:0 3px 3px 0;
+}
+.nav-icon { font-size:16px; width:22px; text-align:center; flex-shrink:0; }
+.nav-badge {
+  margin-left:auto;
+  background:var(--red);
+  color:#fff; font-size:9px; font-weight:600;
+  padding:2px 6px; border-radius:20px;
+}
+
+.sidebar-bottom {
+  padding:12px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.connection-pill {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px;
+  background:var(--bg3); border-radius:8px;
+  font-size:11px; color:var(--text2);
+}
+.dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 6px var(--green);
+  flex-shrink:0;
+  transition:background 0.3s, box-shadow 0.3s;
+}
+.dot.offline { background:var(--red); box-shadow:0 0 6px var(--red); }
+.dot.syncing { background:var(--amber); box-shadow:0 0 6px var(--amber); animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ══ MOBILE TOPBAR ══ */
+#mobileTopbar {
+  display:none;
+  position:fixed; top:0; left:0; right:0;
+  height:var(--topbar);
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  z-index:200;
+  align-items:center;
+  padding:0 16px;
+  padding-top:env(safe-area-inset-top);
+  gap:12px;
+}
+
+/* Always show topbar on small screens AND in PWA standalone mode */
+@media (display-mode: standalone) {
+  #mobileTopbar { display:flex !important; }
+  #main { margin-left:0 !important; padding-top:calc(var(--topbar) + env(safe-area-inset-top)) !important; }
+  #sidebar { transform:translateX(-240px); width:240px; }
+  #sidebar.open { transform:none; }
+}
+.menu-btn {
+  background:none; border:none;
+  color:var(--text); cursor:pointer;
+  font-size:20px; padding:4px;
+}
+.mobile-logo {
+  font-family:'Playfair Display',serif;
+  font-size:15px; font-weight:600;
+  flex:1;
+}
+.mobile-sync-badge {
+  background:var(--amber-dim);
+  border:1px solid rgba(251,191,36,0.3);
+  color:var(--amber);
+  font-size:10px; font-weight:600;
+  padding:3px 10px; border-radius:20px;
+  cursor:pointer;
+  display:none;
+}
+
+/* ══ OVERLAY (mobile) ══ */
+#sidebarOverlay {
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:299;
+  backdrop-filter:blur(2px);
+}
+
+/* ══ MAIN CONTENT ══ */
+#main {
+  margin-left:var(--sidebar);
+  min-height:100vh;
+  transition:margin-left 0.32s var(--ease);
+}
+
+.page {
+  display:none;
+  padding:28px;
+  animation:fadeIn 0.22s var(--ease);
+}
+.page.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* ══ PAGE HEADER ══ */
+.page-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:24px;
+}
+.page-title {
+  font-family:'Playfair Display',serif;
+  font-size:22px; font-weight:600;
+}
+.page-subtitle { font-size:12px; color:var(--text3); margin-top:2px; }
+
+/* ══ CARDS ══ */
+.card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r2);
+  padding:20px;
+}
+.card-title {
+  font-size:11px; font-weight:600;
+  letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:16px;
+}
+
+/* ══ KPI GRID ══ */
+.kpi-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:20px;
+}
+.kpi-card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r2);
+  padding:18px 20px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color 0.2s;
+}
+.kpi-card:hover { border-color:var(--border2); }
+.kpi-card::before {
+  content:'';
+  position:absolute; inset:0;
+  background:var(--gold-glow);
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.kpi-card:hover::before { opacity:1; }
+.kpi-label {
+  font-size:10px; font-weight:600;
+  letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:10px;
+}
+.kpi-value {
+  font-family:'JetBrains Mono',monospace;
+  font-size:22px; font-weight:500;
+  color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.kpi-value.gold { color:var(--gold); }
+.kpi-change {
+  font-size:11px; margin-top:6px;
+  display:flex; align-items:center; gap:4px;
+}
+.kpi-icon {
+  position:absolute; right:16px; top:16px;
+  font-size:24px; opacity:0.15;
+}
+
+/* ══ DASHBOARD GRID ══ */
+.dash-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:14px;
+}
+.dash-grid.three { grid-template-columns:1fr 1fr 1fr; }
+
+/* ══ CHART ══ */
+.chart-wrap { height:160px; display:flex; align-items:flex-end; gap:6px; padding-top:10px; }
+.chart-bar-group { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.chart-bar {
+  width:100%;
+  background:linear-gradient(to top, var(--gold), rgba(212,168,67,0.4));
+  border-radius:4px 4px 0 0;
+  min-height:4px;
+  transition:height 0.5s var(--ease);
+  position:relative;
+  cursor:pointer;
+}
+.chart-bar.best { background:linear-gradient(to top, var(--gold2), var(--gold)); box-shadow:0 0 12px rgba(212,168,67,0.3); }
+.chart-bar:hover::after {
+  content:attr(data-tooltip);
+  position:absolute; bottom:calc(100% + 6px); left:50%;
+  transform:translateX(-50%);
+  background:var(--bg4);
+  border:1px solid var(--border2);
+  color:var(--text);
+  font-size:10px; padding:4px 8px; border-radius:6px;
+  white-space:nowrap;
+  z-index:10;
+}
+.chart-label { font-size:9px; color:var(--text4); text-align:center; }
+
+/* ══ STOCK ALERTS ══ */
+.stock-item {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid var(--border);
+}
+.stock-item:last-child { border-bottom:none; }
+.stock-dot {
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+}
+.stock-dot.critical { background:var(--red); box-shadow:0 0 6px rgba(248,113,113,0.5); }
+.stock-dot.low { background:var(--amber); }
+.stock-dot.good { background:var(--green); }
+.stock-name { flex:1; font-size:13px; font-weight:500; }
+.stock-qty {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--text3);
+}
+.stock-badge {
+  font-size:9px; font-weight:600;
+  padding:2px 8px; border-radius:20px;
+  letter-spacing:0.06em; text-transform:uppercase;
+}
+.stock-badge.critical { background:var(--red-dim); color:var(--red); }
+.stock-badge.low { background:var(--amber-dim); color:var(--amber); }
+.stock-badge.good { background:var(--green-dim); color:var(--green); }
+
+/* ══ AI ADVISOR ══ */
+.ai-insight {
+  font-size:13px; line-height:1.65;
+  color:var(--text2);
+  padding:14px;
+  background:var(--bg3);
+  border-radius:var(--r);
+  border-left:3px solid var(--gold);
+  position:relative;
+}
+.ai-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--gold-dim);
+  border:1px solid rgba(212,168,67,0.2);
+  color:var(--gold);
+  font-size:9px; font-weight:600;
+  letter-spacing:0.08em; text-transform:uppercase;
+  padding:3px 10px; border-radius:20px;
+  margin-bottom:10px;
+}
+.ai-refresh-btn {
+  position:absolute; top:12px; right:12px;
+  background:none; border:1px solid var(--border2);
+  color:var(--text3); border-radius:6px;
+  font-size:10px; padding:3px 8px; cursor:pointer;
+  transition:all 0.2s;
+}
+.ai-refresh-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+/* ══ EXPENSES BREAKDOWN ══ */
+.expense-row {
+  display:flex; align-items:center; gap:10px;
+  padding:6px 0;
+}
+.expense-label { flex:1; font-size:12px; color:var(--text2); }
+.expense-bar-track { flex:2; height:4px; background:var(--bg4); border-radius:2px; overflow:hidden; }
+.expense-bar-fill { height:100%; background:var(--gold); border-radius:2px; transition:width 0.5s var(--ease); }
+.expense-amount { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text3); min-width:90px; text-align:right; }
+
+/* ══ PROFIT SNAPSHOT ══ */
+.profit-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.profit-item { background:var(--bg3); border-radius:var(--r); padding:14px; }
+.profit-label { font-size:10px; color:var(--text3); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:6px; }
+.profit-value { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:500; }
+.profit-value.positive { color:var(--green); }
+.profit-value.negative { color:var(--red); }
+
+/* ══ POS ══ */
+.pos-grid { display:grid; grid-template-columns:1fr 380px; gap:16px; height:calc(100vh - 140px); }
+.product-search {
+  display:flex; align-items:center; gap:8px;
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--r); padding:0 14px;
+  margin-bottom:14px;
+}
+.product-search input {
+  flex:1; background:none; border:none; outline:none;
+  color:var(--text); font-family:'Outfit',sans-serif; font-size:13px;
+  padding:11px 0;
+}
+.product-search input::placeholder { color:var(--text4); }
+.product-search span { color:var(--text3); font-size:16px; }
+
+.product-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(130px,1fr));
+  gap:10px;
+  overflow-y:auto;
+  max-height:calc(100% - 60px);
+  padding-right:4px;
+}
+.product-tile {
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px 12px;
+  cursor:pointer;
+  transition:all 0.18s var(--ease);
+  text-align:center;
+}
+.product-tile:hover { border-color:var(--gold); background:var(--gold-dim); transform:translateY(-1px); }
+.product-tile.out-of-stock { opacity:0.4; cursor:not-allowed; }
+.product-tile.out-of-stock:hover { transform:none; border-color:var(--border); background:var(--bg3); }
+.product-emoji { font-size:28px; margin-bottom:6px; }
+.product-tile-name { font-size:12px; font-weight:500; line-height:1.3; margin-bottom:4px; }
+.product-tile-price { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--gold); }
+.product-tile-stock { font-size:10px; color:var(--text4); margin-top:3px; }
+
+/* ══ CART ══ */
+.cart-panel {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r2);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.cart-header {
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cart-header-title { font-size:14px; font-weight:600; }
+.cart-clear-btn {
+  background:none; border:1px solid var(--border);
+  color:var(--text3); border-radius:6px;
+  font-size:10px; padding:3px 8px; cursor:pointer;
+  transition:all 0.2s;
+}
+.cart-clear-btn:hover { border-color:var(--red); color:var(--red); }
+.cart-items { flex:1; overflow-y:auto; padding:12px 16px; }
+.cart-empty { text-align:center; padding:40px 20px; color:var(--text4); font-size:13px; }
+.cart-item-row {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.cart-item-row:last-child { border-bottom:none; }
+.cart-item-name { flex:1; font-size:13px; font-weight:500; }
+.cart-item-price { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text3); }
+.qty-controls { display:flex; align-items:center; gap:6px; }
+.qty-btn {
+  width:24px; height:24px;
+  border-radius:50%;
+  background:var(--bg4); border:1px solid var(--border);
+  color:var(--text); font-size:14px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+  line-height:1;
+}
+.qty-btn:hover { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+.qty-num { font-family:'JetBrains Mono',monospace; font-size:12px; min-width:20px; text-align:center; }
+.cart-item-total { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500; min-width:80px; text-align:right; }
+
+.cart-footer {
+  padding:16px 20px;
+  border-top:1px solid var(--border);
+}
+.cart-total-row {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:14px;
+}
+.cart-total-label { font-size:13px; color:var(--text2); }
+.cart-total-amount {
+  font-family:'JetBrains Mono',monospace;
+  font-size:20px; font-weight:600; color:var(--gold);
+}
+
+/* ══ BUTTONS ══ */
+.btn-primary {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg, var(--gold), #a07020);
+  color:#0d0d0f; border:none; border-radius:var(--r);
+  font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,168,67,0.3); }
+.btn-primary:active { transform:none; }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn-secondary {
+  padding:9px 18px;
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--text2); border-radius:var(--r);
+  font-family:'Outfit',sans-serif; font-size:13px; font-weight:500;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-secondary:hover { border-color:var(--border2); color:var(--text); }
+
+/* ══ TOAST ══ */
+#toast-container {
+  position:fixed; bottom:24px; right:24px;
+  z-index:9999;
+  display:flex; flex-direction:column; gap:8px;
+}
+.toast {
+  display:flex; align-items:center; gap:10px;
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:var(--r);
+  padding:12px 16px;
+  font-size:13px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.4);
+  animation:toastIn 0.3s var(--ease);
+  max-width:320px;
+}
+.toast.success { border-color:rgba(62,207,142,0.3); }
+.toast.error { border-color:rgba(248,113,113,0.3); }
+.toast.info { border-color:rgba(212,168,67,0.3); }
+@keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+@keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateX(20px)} }
+
+/* ══ TABLE ══ */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th {
+  text-align:left; padding:10px 14px;
+  font-size:10px; font-weight:600;
+  letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--text4);
+  border-bottom:1px solid var(--border);
+}
+.data-table td {
+  padding:12px 14px;
+  font-size:13px; color:var(--text2);
+  border-bottom:1px solid var(--border);
+}
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tr:hover td { background:rgba(255,255,255,0.02); }
+.mono { font-family:'JetBrains Mono',monospace; }
+
+/* ══ BADGES ══ */
+.badge {
+  display:inline-block;
+  font-size:9px; font-weight:600;
+  padding:2px 8px; border-radius:20px;
+  letter-spacing:0.06em; text-transform:uppercase;
+}
+.badge-green { background:var(--green-dim); color:var(--green); }
+.badge-red { background:var(--red-dim); color:var(--red); }
+.badge-amber { background:var(--amber-dim); color:var(--amber); }
+.badge-gold { background:var(--gold-dim); color:var(--gold); }
+
+/* ══ FORM ELEMENTS ══ */
+.form-group { margin-bottom:16px; }
+.form-label {
+  display:block; font-size:11px; font-weight:600;
+  letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:6px;
+}
+.form-input, .form-select {
+  width:100%; padding:10px 14px;
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--text); border-radius:var(--r);
+  font-family:'Outfit',sans-serif; font-size:13px;
+  outline:none; transition:border-color 0.2s;
+  appearance:none;
+}
+.form-input:focus, .form-select:focus { border-color:var(--gold); }
+.form-input::placeholder { color:var(--text4); }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+/* ══ OFFLINE BANNER ══ */
+#offlineBanner {
+  position:fixed; top:0; left:50%; transform:translateX(-50%);
+  background:var(--red-dim);
+  border:1px solid rgba(248,113,113,0.3);
+  color:var(--red);
+  padding:8px 20px; border-radius:0 0 10px 10px;
+  font-size:12px; font-weight:500;
+  z-index:400; display:none;
+  align-items:center; gap:8px;
+}
+
+/* ══ PENDING SYNC ══ */
+.sync-pill {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--amber-dim);
+  border:1px solid rgba(251,191,36,0.2);
+  color:var(--amber);
+  font-size:11px; font-weight:500;
+  padding:5px 12px; border-radius:20px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.sync-pill:hover { background:rgba(251,191,36,0.15); }
+
+/* ══ SETTINGS ══ */
+.settings-section { margin-bottom:28px; }
+.settings-title {
+  font-size:11px; font-weight:600;
+  letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:14px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+
+/* ══ ROLE TOGGLE ══ */
+.role-toggle {
+  display:flex; gap:6px;
+  background:var(--bg3); border-radius:9px;
+  padding:4px;
+}
+.role-btn {
+  flex:1; padding:7px 14px;
+  border:none; border-radius:7px;
+  font-family:'Outfit',sans-serif; font-size:12px; font-weight:500;
+  cursor:pointer; transition:all 0.2s;
+  background:none; color:var(--text3);
+}
+.role-btn.active { background:var(--gold-dim); color:var(--gold); }
+
+/* ══ RESPONSIVE ══ */
+@media (max-width: 900px) {
+  :root { --sidebar: 0px; }
+  #sidebar { transform:translateX(-240px); width:240px; }
+  #sidebar.open { transform:none; }
+  #main { margin-left:0; padding-top:calc(var(--topbar) + env(safe-area-inset-top)); }
+  #mobileTopbar { display:flex; }
+  .kpi-grid { grid-template-columns:1fr 1fr; }
+  .dash-grid { grid-template-columns:1fr; }
+  .dash-grid.three { grid-template-columns:1fr; }
+  .pos-grid { grid-template-columns:1fr; height:auto; }
+  .cart-panel { min-height:360px; }
+  .form-grid { grid-template-columns:1fr; }
+  .page { padding:16px; }
+}
+@media (max-width: 500px) {
+  .kpi-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .kpi-value { font-size:17px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ OFFLINE BANNER ══ -->
+<div id="offlineBanner">📡 OFFLINE MODE — Sales are saved locally and will sync automatically</div>
+
+<!-- ══ SIDEBAR OVERLAY (mobile) ══ -->
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<aside id="sidebar">
+  <div class="sidebar-top">
+    <div class="logo-mark">
+      <img src="icons/icon-48x48.png" alt="QuantumServe" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#d4a843,#7a5510)';this.parentElement.style.fontSize='16px';this.parentElement.textContent='Q'">
+    </div>
+    <div>
+      <div class="logo-text">QuantumServe</div>
+      <div class="logo-sub">SME ERP</div>
+    </div>
+  </div>
+
+  <div class="business-chip" onclick="showPage('settings')">
+    <div class="business-name" id="sidebarBizName">My Business</div>
+    <div class="business-type" id="sidebarUserName">⚙ Settings</div>
+  </div>
+
+  <nav>
+    <div class="nav-section">Core</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
+      <span class="nav-icon">⬡</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('pos')" data-page="pos">
+      <span class="nav-icon">💰</span> Point of Sale
+    </div>
+
+    <div class="nav-section">Records</div>
+    <div class="nav-item" onclick="showPage('sales')" data-page="sales">
+      <span class="nav-icon">📈</span> Sales History
+    </div>
+    <div class="nav-item" onclick="showPage('inventory')" data-page="inventory">
+      <span class="nav-icon">📦</span> Inventory
+      <span class="nav-badge" id="stockAlertBadge" style="display:none">!</span>
+    </div>
+    <div class="nav-item" onclick="showPage('expenses')" data-page="expenses">
+      <span class="nav-icon">💳</span> Expenses
+    </div>
+    <div class="nav-item" onclick="showPage('suppliers')" data-page="suppliers">
+      <span class="nav-icon">🤝</span> Suppliers
+    </div>
+
+    <div class="nav-section">Admin</div>
+    <div class="nav-item" onclick="showPage('staff')" data-page="staff">
+      <span class="nav-icon">👥</span> Staff
+    </div>
+    <div class="nav-item" onclick="showPage('settings')" data-page="settings">
+      <span class="nav-icon">⚙</span> Settings
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="connection-pill">
+      <div class="dot" id="connDot"></div>
+      <span id="connLabel">Connecting…</span>
+      <span id="syncPending" class="sync-pill" style="display:none;margin-left:auto;font-size:9px;padding:2px 8px;" onclick="manualSync()">Sync</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MOBILE TOPBAR ══ -->
+<div id="mobileTopbar">
+  <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+  <div class="mobile-logo">QuantumServe ERP</div>
+  <span id="mobileSyncBadge" class="mobile-sync-badge" onclick="manualSync()">0 pending</span>
+</div>
+
+<!-- ══ TOAST CONTAINER ══ -->
+<div id="toast-container"></div>
+
+<!-- ══ MAIN ══ -->
+<main id="main">
+
+<!-- ════ DASHBOARD ════ -->
+<section id="page-dashboard" class="page active">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle" id="dashSubtitle">Loading…</div>
+    </div>
+    <button class="btn-secondary" onclick="refreshDashboard()">↻ Refresh</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Today's Revenue</div>
+      <div class="kpi-value gold" id="kpiRevenue">—</div>
+      <div class="kpi-change" id="kpiRevenueChange"></div>
+      <div class="kpi-icon">💰</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Transactions</div>
+      <div class="kpi-value" id="kpiTxns">—</div>
+      <div class="kpi-change" id="kpiTxnsChange"></div>
+      <div class="kpi-icon">🧾</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Stock Alerts</div>
+      <div class="kpi-value" id="kpiStockAlerts">—</div>
+      <div class="kpi-change" id="kpiStockChange" style="color:var(--red)"></div>
+      <div class="kpi-icon">⚠️</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Monthly Expenses</div>
+      <div class="kpi-value" id="kpiExpenses">—</div>
+      <div class="kpi-change" id="kpiExpensesChange"></div>
+      <div class="kpi-icon">💳</div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- 7-day chart -->
+    <div class="card">
+      <div class="card-title">7-Day Sales</div>
+      <div id="salesChart" class="chart-wrap"></div>
+      <div id="chartLabels" style="display:flex;gap:6px;margin-top:8px;"></div>
+      <div style="display:flex;gap:20px;margin-top:10px;">
+        <div style="font-size:11px;color:var(--text3)">Best day: <span id="bestDay" style="color:var(--gold2);font-weight:600">—</span></div>
+        <div style="font-size:11px;color:var(--text3)">Avg/day: <span id="avgDay" style="color:var(--text);font-weight:600">—</span></div>
+      </div>
+    </div>
+
+    <!-- Stock Alerts -->
+    <div class="card">
+      <div class="card-title">Stock Alerts</div>
+      <div id="stockAlertList">
+        <div style="color:var(--text4);font-size:13px;text-align:center;padding:20px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- AI Advisor -->
+    <div class="card">
+      <div class="card-title">AI Business Advisor</div>
+      <div class="ai-badge">✦ AI Insight</div>
+      <div class="ai-insight" id="aiInsight">
+        <button class="ai-refresh-btn" onclick="refreshAIInsight()">Refresh</button>
+        Analysing your business data…
+      </div>
+    </div>
+
+    <!-- Expenses Breakdown -->
+    <div class="card">
+      <div class="card-title">Expenses Breakdown</div>
+      <div id="expensesBreakdown">
+        <div style="color:var(--text4);font-size:13px;text-align:center;padding:20px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profit Snapshot -->
+  <div class="card">
+    <div class="card-title">Profit Snapshot — This Month</div>
+    <div class="profit-grid">
+      <div class="profit-item">
+        <div class="profit-label">Revenue</div>
+        <div class="profit-value" id="profitRevenue">—</div>
+      </div>
+      <div class="profit-item">
+        <div class="profit-label">Expenses</div>
+        <div class="profit-value negative" id="profitExpenses">—</div>
+      </div>
+      <div class="profit-item">
+        <div class="profit-label">Gross Profit</div>
+        <div class="profit-value positive" id="profitGross">—</div>
+      </div>
+      <div class="profit-item">
+        <div class="profit-label">Profit Margin</div>
+        <div class="profit-value" id="profitMargin">—</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ POINT OF SALE ════ -->
+<section id="page-pos" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Point of Sale</div>
+      <div class="page-subtitle">Works offline · auto-syncs when connected</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="role-toggle">
+        <button class="role-btn active" id="roleAdminBtn" onclick="setRole('admin')">👑 Admin</button>
+        <button class="role-btn" id="roleCashierBtn" onclick="setRole('cashier')">🧾 Cashier</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pos-grid">
+    <!-- Products -->
+    <div style="display:flex;flex-direction:column;">
+      <div class="product-search">
+        <span>🔍</span>
+        <input type="text" id="posSearch" placeholder="Search products…" oninput="renderPOSProducts()">
+      </div>
+      <div id="posProductGrid" class="product-grid">
+        <div style="color:var(--text4);text-align:center;padding:40px;grid-column:1/-1;">Loading products…</div>
+      </div>
+    </div>
+
+    <!-- Cart -->
+    <div class="cart-panel">
+      <div class="cart-header">
+        <div class="cart-header-title">🛒 Cart <span id="cartCountLabel" style="font-size:11px;color:var(--text3)"></span></div>
+        <button class="cart-clear-btn" onclick="clearCart()">Clear</button>
+      </div>
+      <div class="cart-items" id="cartItemsContainer">
+        <div class="cart-empty">Cart is empty<br><span style="font-size:11px;color:var(--text4)">Tap a product to add</span></div>
+      </div>
+      <div class="cart-footer">
+        <div class="cart-total-row">
+          <div class="cart-total-label">Total</div>
+          <div class="cart-total-amount"><span id="currencySymbolCart">UGX</span> <span id="cartTotalAmount">0</span></div>
+        </div>
+        <button class="btn-primary" id="checkoutBtn" onclick="checkout()">💵 Checkout</button>
+        <div id="checkoutMsg" style="margin-top:8px;font-size:12px;text-align:center;color:var(--text3);"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SALES HISTORY ════ -->
+<section id="page-sales" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Sales History</div>
+      <div class="page-subtitle" id="salesSubtitle"></div>
+    </div>
+    <button class="btn-secondary" onclick="loadSales()">↻ Refresh</button>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <table class="data-table" id="salesTable">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="salesTableBody">
+        <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════ INVENTORY ════ -->
+<section id="page-inventory" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Inventory & Products</div>
+      <div class="page-subtitle" id="inventorySubtitle"></div>
+    </div>
+    <button class="btn-secondary" onclick="loadInventory()">↻ Refresh</button>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Cost</th>
+          <th>Stock</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryTableBody">
+        <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════ EXPENSES ════ -->
+<section id="page-expenses" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Expenses</div>
+      <div class="page-subtitle" id="expensesSubtitle"></div>
+    </div>
+    <button class="btn-secondary" onclick="loadExpensesPage()">↻ Refresh</button>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Description</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody id="expensesTableBody">
+        <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════ SUPPLIERS ════ -->
+<section id="page-suppliers" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Suppliers</div>
+      <div class="page-subtitle">Manage your suppliers</div>
+    </div>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Contact</th>
+          <th>Phone</th>
+          <th>Products</th>
+        </tr>
+      </thead>
+      <tbody id="suppliersTableBody">
+        <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════ STAFF ════ -->
+<section id="page-staff" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Staff</div>
+      <div class="page-subtitle">Team members and access</div>
+    </div>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="staffTableBody">
+        <tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════ SETTINGS ════ -->
+<section id="page-settings" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Settings</div>
+      <div class="page-subtitle">Configure your ERP</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:800px;">
+    <div class="card">
+      <div class="settings-title">Business Details</div>
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input class="form-input" id="settingBizName" type="text" placeholder="My Business">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Type</label>
+        <input class="form-input" id="settingBizType" type="text" placeholder="Retail / Restaurant / etc.">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="settingCurrency">
+          <option value="UGX">UGX — Ugandan Shilling</option>
+          <option value="KES">KES — Kenyan Shilling</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="TZS">TZS — Tanzanian Shilling</option>
+          <option value="RWF">RWF — Rwandan Franc</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="settings-title">User & API</div>
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input class="form-input" id="settingUserName" type="text" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Anthropic API Key (optional)</label>
+        <input class="form-input" id="settingApiKey" type="password" placeholder="sk-ant-…  (for AI Advisor)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Supabase URL</label>
+        <input class="form-input" id="settingSupabaseUrl" type="text" placeholder="https://xxx.supabase.co">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Supabase Anon Key</label>
+        <input class="form-input" id="settingSupabaseKey" type="password" placeholder="eyJ…">
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <button class="btn-primary" style="max-width:200px;" onclick="saveSettings()">💾 Save Settings</button>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG — edit these defaults or override in Settings
+// ══════════════════════════════════════════════════════════
+const DEFAULT_SUPABASE_URL  = 'https://yzjtxtzsvmsbxvbeggny.supabase.co';
+const DEFAULT_SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6anR4dHpzdm1zYnh2YmVnZ255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzU4MzcsImV4cCI6MjA5MzU1MTgzN30.EMihpnPlUrUStohHbsKevtsD0hgfdUEQ_UnWMbpk0O8';
+const DEFAULT_USER_ID       = '027d2a71-b287-4891-ad4f-9b17e64b07e2';
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let supabase = null;
+let products = [];
+let cart = [];
+let currentRole = 'admin';
+let isOnline = navigator.onLine;
+let db = null;
+let currency = 'UGX';
+
+const DB_NAME = 'QuantumServeOfflineDB';
+const DB_VERSION = 1;
+
+// ══════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════
+function getSettings() {
+  return {
+    bizName:     localStorage.getItem('qs_biz_name')     || 'My Business',
+    bizType:     localStorage.getItem('qs_biz_type')     || 'SME',
+    currency:    localStorage.getItem('qs_currency')     || 'UGX',
+    userName:    localStorage.getItem('qs_user_name')    || 'Owner',
+    apiKey:      localStorage.getItem('qs_api_key')      || '',
+    supabaseUrl: localStorage.getItem('qs_supabase_url') || DEFAULT_SUPABASE_URL,
+    supabaseKey: localStorage.getItem('qs_supabase_key') || DEFAULT_SUPABASE_KEY,
+  };
+}
+
+function saveSettings() {
+  const s = getSettings();
+  localStorage.setItem('qs_biz_name',     document.getElementById('settingBizName').value   || s.bizName);
+  localStorage.setItem('qs_biz_type',     document.getElementById('settingBizType').value   || s.bizType);
+  localStorage.setItem('qs_currency',     document.getElementById('settingCurrency').value  || s.currency);
+  localStorage.setItem('qs_user_name',    document.getElementById('settingUserName').value  || s.userName);
+  localStorage.setItem('qs_api_key',      document.getElementById('settingApiKey').value);
+  localStorage.setItem('qs_supabase_url', document.getElementById('settingSupabaseUrl').value || s.supabaseUrl);
+  localStorage.setItem('qs_supabase_key', document.getElementById('settingSupabaseKey').value || s.supabaseKey);
+  applySettings();
+  toast('Settings saved ✓', 'success');
+  // Re-init Supabase with new creds if changed
+  initSupabase();
+}
+
+function applySettings() {
+  const s = getSettings();
+  currency = s.currency;
+  document.getElementById('sidebarBizName').textContent  = s.bizName;
+  document.getElementById('sidebarUserName').textContent = s.userName;
+  // Populate settings form
+  document.getElementById('settingBizName').value    = s.bizName;
+  document.getElementById('settingBizType').value    = s.bizType;
+  document.getElementById('settingCurrency').value   = s.currency;
+  document.getElementById('settingUserName').value   = s.userName;
+  document.getElementById('settingApiKey').value     = s.apiKey;
+  document.getElementById('settingSupabaseUrl').value = s.supabaseUrl;
+  document.getElementById('settingSupabaseKey').value = s.supabaseKey;
+  document.getElementById('currencySymbolCart').textContent = s.currency;
+}
+
+// ══════════════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════════════
+function initSupabase() {
+  const s = getSettings();
+  try {
+    supabase = window.supabase.createClient(s.supabaseUrl, s.supabaseKey);
+  } catch(e) {
+    console.warn('Supabase init failed', e);
+    supabase = null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// INDEXEDDB
+// ══════════════════════════════════════════════════════════
+function initIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { db = req.result; resolve(); };
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('offline_sales')) {
+        const store = d.createObjectStore('offline_sales', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('synced', 'synced');
+      }
+      if (!d.objectStoreNames.contains('products_cache')) {
+        d.createObjectStore('products_cache', { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+async function idbSaveSale(sale) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['offline_sales'], 'readwrite');
+    tx.objectStore('offline_sales').add({ ...sale, synced: false, created_at: new Date().toISOString() });
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+
+async function idbGetUnsynced() {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['offline_sales'], 'readonly');
+    const req = tx.objectStore('offline_sales').index('synced').getAll(IDBKeyRange.only(false));
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+async function idbMarkSynced(id) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['offline_sales'], 'readwrite');
+    const store = tx.objectStore('offline_sales');
+    const req = store.get(id);
+    req.onsuccess = () => {
+      const s = req.result;
+      if (s) { s.synced = true; store.put(s); }
+      res();
+    };
+    req.onerror = () => rej(req.error);
+  });
+}
+
+async function idbCacheProducts(prods) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['products_cache'], 'readwrite');
+    const store = tx.objectStore('products_cache');
+    prods.forEach(p => store.put(p));
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+
+async function idbLoadProducts() {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['products_cache'], 'readonly');
+    const req = tx.objectStore('products_cache').getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// CONNECTIVITY
+// ══════════════════════════════════════════════════════════
+function updateConnectionUI() {
+  const dot   = document.getElementById('connDot');
+  const label = document.getElementById('connLabel');
+  if (isOnline) {
+    dot.className = 'dot';
+    label.textContent = 'Online';
+    document.getElementById('offlineBanner').style.display = 'none';
+  } else {
+    dot.className = 'dot offline';
+    label.textContent = 'Offline';
+    document.getElementById('offlineBanner').style.display = 'flex';
+  }
+}
+
+window.addEventListener('online',  () => { isOnline = true;  updateConnectionUI(); syncOfflineSales(); });
+window.addEventListener('offline', () => { isOnline = false; updateConnectionUI(); });
+
+// ══════════════════════════════════════════════════════════
+// SYNC
+// ══════════════════════════════════════════════════════════
+async function syncOfflineSales() {
+  if (!isOnline || !supabase || !db) return;
+  const unsynced = await idbGetUnsynced();
+  if (!unsynced.length) { hideSyncPill(); return; }
+
+  showSyncPill(unsynced.length);
+  const dot = document.getElementById('connDot');
+  dot.className = 'dot syncing';
+  document.getElementById('connLabel').textContent = 'Syncing…';
+
+  let synced = 0;
+  for (const sale of unsynced) {
+    try {
+      const { error } = await supabase.from('sales').insert([{
+        product_id:   sale.product_id,
+        product_name: sale.product_name,
+        qty:          sale.qty,
+        total:        sale.total,
+        user_id:      DEFAULT_USER_ID,
+        sale_date:    sale.created_at
+      }]);
+      if (!error) {
+        await idbMarkSynced(sale.id);
+        synced++;
+        // Optionally reduce stock
+        try { await supabase.rpc('reduce_stock', { product_id: sale.product_id, quantity: sale.qty }); } catch(e){}
+      }
+    } catch(e) { console.warn('Sync error:', e); }
+  }
+
+  dot.className = 'dot';
+  document.getElementById('connLabel').textContent = 'Online';
+  if (synced > 0) {
+    toast(`✅ Synced ${synced} offline sale${synced > 1 ? 's' : ''}`, 'success');
+    await loadProducts();
+  }
+  const rem = await idbGetUnsynced();
+  rem.length ? showSyncPill(rem.length) : hideSyncPill();
+}
+
+function showSyncPill(n) {
+  document.getElementById('syncPending').style.display = 'inline-flex';
+  document.getElementById('syncPending').textContent = `${n} pending`;
+  const mb = document.getElementById('mobileSyncBadge');
+  mb.style.display = 'inline-block';
+  mb.textContent = `${n} pending`;
+}
+function hideSyncPill() {
+  document.getElementById('syncPending').style.display = 'none';
+  document.getElementById('mobileSyncBadge').style.display = 'none';
+}
+function manualSync() { syncOfflineSales(); }
+
+// ══════════════════════════════════════════════════════════
+// PRODUCTS
+// ══════════════════════════════════════════════════════════
+async function loadProducts() {
+  if (isOnline && supabase) {
+    try {
+      const { data, error } = await supabase.from('products').select('*').order('name');
+      if (!error && data) {
+        products = data;
+        await idbCacheProducts(products);
+        renderPOSProducts();
+        return;
+      }
+    } catch(e) {}
+  }
+  // Fallback to cache
+  try {
+    const cached = await idbLoadProducts();
+    if (cached && cached.length) {
+      products = cached;
+      renderPOSProducts();
+    } else {
+      document.getElementById('posProductGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text4)">⚠️ No products cached. Connect to internet first.</div>';
+    }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════
+// POS — RENDER
+// ══════════════════════════════════════════════════════════
+function getEmoji(name) {
+  const n = name.toLowerCase();
+  if (n.includes('chicken') || n.includes('meat') || n.includes('beef')) return '🍗';
+  if (n.includes('fish')) return '🐟';
+  if (n.includes('rice')) return '🍚';
+  if (n.includes('juice') || n.includes('drink') || n.includes('soda')) return '🥤';
+  if (n.includes('water')) return '💧';
+  if (n.includes('bread')) return '🍞';
+  if (n.includes('egg')) return '🥚';
+  if (n.includes('milk')) return '🥛';
+  if (n.includes('cake') || n.includes('dessert')) return '🎂';
+  if (n.includes('coffee') || n.includes('tea')) return '☕';
+  if (n.includes('phone') || n.includes('airtime')) return '📱';
+  return '📦';
+}
+
+function renderPOSProducts() {
+  const search = (document.getElementById('posSearch')?.value || '').toLowerCase();
+  const filtered = products.filter(p => p.name.toLowerCase().includes(search));
+  const grid = document.getElementById('posProductGrid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text4)">No products found</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-tile ${p.stock <= 0 ? 'out-of-stock' : ''}"
+         onclick="${p.stock > 0 ? `addToCart('${esc(p.id)}','${esc(p.name)}',${p.price},${p.stock})` : ''}">
+      <div class="product-emoji">${getEmoji(p.name)}</div>
+      <div class="product-tile-name">${esc(p.name)}</div>
+      <div class="product-tile-price">${currency} ${fmt(p.price)}</div>
+      <div class="product-tile-stock">Stock: ${p.stock}${p.stock <= 0 ? ' · <span style="color:var(--red)">Out</span>' : ''}</div>
+      ${currentRole === 'admin' ? `<div class="product-tile-stock" style="color:var(--text3)">Cost: ${currency} ${fmt(p.cost_price||0)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// CART
+// ══════════════════════════════════════════════════════════
+function addToCart(id, name, price, stock) {
+  const ex = cart.find(i => i.id === id);
+  if (ex) {
+    if (ex.qty + 1 > stock) { toast('Not enough stock!', 'error'); return; }
+    ex.qty++;
+  } else {
+    cart.push({ id, name, price, qty: 1, stock });
+  }
+  renderCart();
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItemsContainer');
+  if (!cart.length) {
+    container.innerHTML = '<div class="cart-empty">Cart is empty<br><span style="font-size:11px;color:var(--text4)">Tap a product to add</span></div>';
+    document.getElementById('cartTotalAmount').textContent = '0';
+    document.getElementById('cartCountLabel').textContent = '';
+    return;
+  }
+  let total = 0;
+  container.innerHTML = cart.map((item, idx) => {
+    const sub = item.price * item.qty;
+    total += sub;
+    return `
+      <div class="cart-item-row">
+        <div style="flex:1">
+          <div class="cart-item-name">${esc(item.name)}</div>
+          <div class="cart-item-price">${currency} ${fmt(item.price)} × ${item.qty}</div>
+        </div>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="adjustQty(${idx},-1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="adjustQty(${idx},1)">+</button>
+        </div>
+        <div class="cart-item-total">${currency} ${fmt(sub)}</div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('cartTotalAmount').textContent = fmt(total);
+  const totalQty = cart.reduce((s,i) => s+i.qty, 0);
+  document.getElementById('cartCountLabel').textContent = `(${totalQty} item${totalQty>1?'s':''})`;
+}
+
+function adjustQty(idx, delta) {
+  const item = cart[idx];
+  const nq = item.qty + delta;
+  if (nq < 1) { cart.splice(idx, 1); }
+  else if (nq <= item.stock) { item.qty = nq; }
+  else { toast('Not enough stock!', 'error'); }
+  renderCart();
+}
+
+function clearCart() { cart = []; renderCart(); }
+
+// ══════════════════════════════════════════════════════════
+// CHECKOUT
+// ══════════════════════════════════════════════════════════
+async function checkout() {
+  if (!cart.length) { toast('Cart is empty', 'error'); return; }
+  const btn = document.getElementById('checkoutBtn');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+
+  const total = cart.reduce((s,i) => s + i.price * i.qty, 0);
+
+  if (isOnline && supabase) {
+    try {
+      for (const item of cart) {
+        const { error } = await supabase.from('sales').insert([{
+          product_id:   item.id,
+          product_name: item.name,
+          qty:          item.qty,
+          total:        item.price * item.qty,
+          user_id:      DEFAULT_USER_ID
+        }]);
+        if (error) throw error;
+      }
+      toast(`✅ Sale complete! ${currency} ${fmt(total)}`, 'success');
+      await loadProducts();
+      cart = []; renderCart();
+    } catch(e) {
+      toast('Online save failed — saving offline…', 'error');
+      await saveOffline(total);
+    }
+  } else {
+    await saveOffline(total);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💵 Checkout';
+}
+
+async function saveOffline(total) {
+  for (const item of cart) {
+    await idbSaveSale({ product_id: item.id, product_name: item.name, qty: item.qty, total: item.price * item.qty });
+    const prod = products.find(p => p.id === item.id);
+    if (prod) prod.stock = Math.max(0, prod.stock - item.qty);
+  }
+  renderPOSProducts();
+  const unsynced = await idbGetUnsynced();
+  showSyncPill(unsynced.length);
+  toast(`💾 Saved offline! ${currency} ${fmt(total)} · syncs when online`, 'info');
+  cart = []; renderCart();
+}
+
+// ══════════════════════════════════════════════════════════
+// ROLE
+// ══════════════════════════════════════════════════════════
+function setRole(r) {
+  currentRole = r;
+  document.getElementById('roleAdminBtn').className   = 'role-btn' + (r==='admin'   ? ' active' : '');
+  document.getElementById('roleCashierBtn').className = 'role-btn' + (r==='cashier' ? ' active' : '');
+  renderPOSProducts();
+}
+
+// ══════════════════════════════════════════════════════════
+// SALES HISTORY
+// ══════════════════════════════════════════════════════════
+async function loadSales() {
+  const tbody = document.getElementById('salesTableBody');
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>';
+  if (!isOnline || !supabase) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--amber)">⚠️ Offline — connect to view sales history</td></tr>';
+    return;
+  }
+  try {
+    const { data, error } = await supabase.from('sales').select('*').order('sale_date', { ascending: false }).limit(200);
+    if (error) throw error;
+    document.getElementById('salesSubtitle').textContent = `${data.length} records`;
+    tbody.innerHTML = data.map(s => `
+      <tr>
+        <td class="mono">${fmtDate(s.created_at || s.sale_date)}</td>
+        <td>${esc(s.product_name || '—')}</td>
+        <td>${s.qty}</td>
+        <td class="mono">${currency} ${fmt(s.total)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">No sales yet</td></tr>';
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--red)">Failed to load</td></tr>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// INVENTORY
+// ══════════════════════════════════════════════════════════
+async function loadInventory() {
+  const tbody = document.getElementById('inventoryTableBody');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>';
+
+  let data = [];
+  if (isOnline && supabase) {
+    try {
+      const r = await supabase.from('products').select('*').order('name');
+      if (!r.error) data = r.data;
+    } catch(e) {}
+  }
+  if (!data.length) data = await idbLoadProducts();
+
+  let criticalCount = 0;
+  document.getElementById('inventorySubtitle').textContent = `${data.length} products`;
+  tbody.innerHTML = data.map(p => {
+    let status, cls;
+    if (p.stock <= 0)  { status='Out of Stock'; cls='badge-red';   criticalCount++; }
+    else if (p.stock <= 5) { status='Low Stock';   cls='badge-amber'; criticalCount++; }
+    else               { status='In Stock';     cls='badge-green'; }
+    return `
+      <tr>
+        <td><b>${esc(p.name)}</b></td>
+        <td class="mono">${currency} ${fmt(p.price)}</td>
+        <td class="mono">${currency} ${fmt(p.cost_price||0)}</td>
+        <td class="mono">${p.stock}</td>
+        <td><span class="badge ${cls}">${status}</span></td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text4)">No products found</td></tr>';
+
+  const badge = document.getElementById('stockAlertBadge');
+  badge.style.display = criticalCount ? 'inline-block' : 'none';
+  badge.textContent = criticalCount;
+}
+
+// ══════════════════════════════════════════════════════════
+// EXPENSES (page)
+// ══════════════════════════════════════════════════════════
+async function loadExpensesPage() {
+  const tbody = document.getElementById('expensesTableBody');
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">Loading…</td></tr>';
+  if (!isOnline || !supabase) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--amber)">⚠️ Offline — connect to view expenses</td></tr>';
+    return;
+  }
+  try {
+    const { data, error } = await supabase.from('expenses').select('*').order('created_at', { ascending: false }).limit(200);
+    if (error) throw error;
+    document.getElementById('expensesSubtitle').textContent = `${data.length} records`;
+    tbody.innerHTML = data.map(e => `
+      <tr>
+        <td class="mono">${fmtDate(e.created_at)}</td>
+        <td>${esc(e.category || '—')}</td>
+        <td>${esc(e.description || '—')}</td>
+        <td class="mono">${currency} ${fmt(e.amount)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">No expenses yet</td></tr>';
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--red)">Failed to load</td></tr>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// SUPPLIERS
+// ══════════════════════════════════════════════════════════
+async function loadSuppliers() {
+  const tbody = document.getElementById('suppliersTableBody');
+  if (!isOnline || !supabase) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--amber)">⚠️ Offline</td></tr>';
+    return;
+  }
+  try {
+    const { data, error } = await supabase.from('suppliers').select('*').order('name');
+    if (error) throw error;
+    tbody.innerHTML = data.length ? data.map(s => `
+      <tr>
+        <td><b>${esc(s.name)}</b></td>
+        <td>${esc(s.contact_person||'—')}</td>
+        <td class="mono">${esc(s.phone||'—')}</td>
+        <td>${esc(s.products||'—')}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">No suppliers found</td></tr>';
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text4)">No suppliers table found</td></tr>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// STAFF
+// ══════════════════════════════════════════════════════════
+async function loadStaff() {
+  const tbody = document.getElementById('staffTableBody');
+  if (!isOnline || !supabase) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--amber)">⚠️ Offline</td></tr>';
+    return;
+  }
+  try {
+    const { data, error } = await supabase.from('staff').select('*').order('name');
+    if (error) throw error;
+    tbody.innerHTML = data.length ? data.map(s => `
+      <tr>
+        <td><b>${esc(s.name)}</b></td>
+        <td>${esc(s.role||'—')}</td>
+        <td><span class="badge ${s.active ? 'badge-green' : 'badge-red'}">${s.active ? 'Active' : 'Inactive'}</span></td>
+      </tr>
+    `).join('') : '<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text4)">No staff found</td></tr>';
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text4)">No staff table found</td></tr>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════
+async function refreshDashboard() {
+  const now = new Date();
+  const s = getSettings();
+  document.getElementById('dashSubtitle').textContent =
+    `${s.bizName} · ${now.toLocaleDateString('en-UG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+
+  if (!isOnline || !supabase) {
+    setKPI('kpiRevenue','—'); setKPI('kpiTxns','—'); setKPI('kpiStockAlerts','—'); setKPI('kpiExpenses','—');
+    document.getElementById('stockAlertList').innerHTML = '<div style="color:var(--amber);font-size:12px;text-align:center;padding:20px">Offline</div>';
+    renderAIInsightLocal({});
+    return;
+  }
+
+  try {
+    // Today's sales — supports both sale_date and created_at
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const { data: todaySalesRaw } = await supabase.from('sales').select('total,qty,sale_date,created_at');
+    const todaySales = (todaySalesRaw||[]).filter(s => new Date(s.sale_date || s.created_at) >= todayStart);
+    const todayRevenue = todaySales.reduce((s,r) => s + (r.total||0), 0);
+    const todayTxns    = todaySales.length;
+    setKPI('kpiRevenue', `${currency} ${fmt(todayRevenue)}`);
+    setKPI('kpiTxns', todayTxns);
+
+    // Month expenses — supports expense_date and created_at
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const { data: monthExpRaw } = await supabase.from('expenses').select('amount,expense_date,created_at');
+    const monthExp = (monthExpRaw||[]).filter(e => new Date(e.expense_date || e.created_at) >= monthStart);
+    const expTotal = monthExp.reduce((s,r) => s+(r.amount||0), 0);
+    setKPI('kpiExpenses', `${currency} ${fmt(expTotal)}`);
+
+    // Stock alerts — uses low_stock_level if present
+    const { data: prods } = await supabase.from('products').select('name,stock,low_stock_level').order('stock');
+    const critical = (prods||[]).filter(p => p.stock <= 0).length;
+    const low      = (prods||[]).filter(p => p.stock > 0 && p.stock <= (p.low_stock_level || 5)).length;
+    setKPI('kpiStockAlerts', critical + low);
+
+    // Stock list
+    const alertItems = (prods||[]).filter(p => p.stock <= (p.low_stock_level || 10)).slice(0, 8);
+    document.getElementById('stockAlertList').innerHTML = alertItems.length
+      ? alertItems.map(p => {
+          const cls = p.stock <= 0 ? 'critical' : p.stock <= 5 ? 'low' : 'good';
+          const lbl = p.stock <= 0 ? 'Critical'  : p.stock <= 5 ? 'Low'  : 'Good';
+          return `<div class="stock-item">
+            <div class="stock-dot ${cls}"></div>
+            <div class="stock-name">${esc(p.name)}</div>
+            <div class="stock-qty">${p.stock} units</div>
+            <div class="stock-badge ${cls}">${lbl}</div>
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--green);font-size:13px;text-align:center;padding:20px;">✓ All stock levels healthy</div>';
+
+    // Update inventory badge
+    document.getElementById('stockAlertBadge').style.display = (critical+low) ? 'inline-block' : 'none';
+    document.getElementById('stockAlertBadge').textContent = critical + low;
+
+    // 7-day chart
+    const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); sevenDaysAgo.setHours(0,0,0,0);
+    const { data: weekSalesRaw } = await supabase.from('sales').select('total,sale_date,created_at');
+    const weekSales = (weekSalesRaw||[]).filter(s => new Date(s.sale_date || s.created_at) >= sevenDaysAgo);
+    renderChart(weekSales);
+
+    // Month revenue for profit
+    const { data: monthSalesRaw } = await supabase.from('sales').select('total,sale_date,created_at');
+    const monthSales = (monthSalesRaw||[]).filter(s => new Date(s.sale_date || s.created_at) >= monthStart);
+    const monthRevenue = monthSales.reduce((s,r) => s+(r.total||0), 0);
+    const profit = monthRevenue - expTotal;
+    const margin = monthRevenue > 0 ? ((profit/monthRevenue)*100).toFixed(1) : 0;
+
+    document.getElementById('profitRevenue').textContent  = `${currency} ${fmt(monthRevenue)}`;
+    document.getElementById('profitExpenses').textContent = `${currency} ${fmt(expTotal)}`;
+    document.getElementById('profitGross').textContent    = `${currency} ${fmt(profit)}`;
+    document.getElementById('profitGross').className      = 'profit-value ' + (profit >= 0 ? 'positive' : 'negative');
+    document.getElementById('profitMargin').textContent   = `${margin}%`;
+    document.getElementById('profitMargin').className     = 'profit-value ' + (profit >= 0 ? 'positive' : 'negative');
+
+    // Expenses breakdown
+    const { data: expCatsRaw } = await supabase.from('expenses').select('category,amount,expense_date,created_at');
+    const expCats = (expCatsRaw||[]).filter(e => new Date(e.expense_date || e.created_at) >= monthStart);
+    renderExpensesBreakdown(expCats || []);
+
+    // AI Insight
+    renderAIInsightLocal({ todayRevenue, todayTxns, critical, low, monthRevenue, expTotal, profit, margin });
+
+  } catch(e) {
+    console.warn('Dashboard error', e);
+  }
+}
+
+function setKPI(id, val) {
+  document.getElementById(id).textContent = val;
+}
+
+function renderChart(sales) {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+    days.push(d);
+  }
+  const totals = days.map(d => {
+    const next = new Date(d); next.setDate(next.getDate()+1);
+    return sales.filter(s => {
+      const sd = new Date(s.sale_date || s.created_at);
+      return sd >= d && sd < next;
+    }).reduce((sum, s) => sum + (s.total||0), 0);
+  });
+
+  const maxVal  = Math.max(...totals, 1);
+  const bestIdx = totals.indexOf(Math.max(...totals));
+  const avg     = totals.reduce((s,v)=>s+v,0) / 7;
+
+  const chartDiv  = document.getElementById('salesChart');
+  const labelsDiv = document.getElementById('chartLabels');
+  const dayNames  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  chartDiv.innerHTML = totals.map((v, i) => {
+    const h = Math.max(4, Math.round((v/maxVal)*140));
+    const isBest = i === bestIdx && v > 0;
+    return `<div class="chart-bar-group">
+      <div class="chart-bar ${isBest ? 'best' : ''}" style="height:${h}px" data-tooltip="${currency} ${fmt(v)}"></div>
+    </div>`;
+  }).join('');
+
+  labelsDiv.innerHTML = days.map(d =>
+    `<div style="flex:1;font-size:9px;color:var(--text4);text-align:center;">${dayNames[d.getDay()]}</div>`
+  ).join('');
+
+  document.getElementById('bestDay').textContent = bestIdx >= 0 ? `${dayNames[days[bestIdx].getDay()]} (${currency} ${fmt(totals[bestIdx])})` : '—';
+  document.getElementById('avgDay').textContent  = `${currency} ${fmt(Math.round(avg))}`;
+}
+
+function renderExpensesBreakdown(rows) {
+  const cats = {};
+  rows.forEach(r => { cats[r.category||'Other'] = (cats[r.category||'Other']||0) + r.amount; });
+  const total = Object.values(cats).reduce((s,v)=>s+v,0) || 1;
+  const div = document.getElementById('expensesBreakdown');
+  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  div.innerHTML = sorted.length ? sorted.map(([cat,amt]) => `
+    <div class="expense-row">
+      <div class="expense-label">${esc(cat)}</div>
+      <div class="expense-bar-track"><div class="expense-bar-fill" style="width:${Math.round((amt/total)*100)}%"></div></div>
+      <div class="expense-amount">${currency} ${fmt(amt)}</div>
+    </div>
+  `).join('') : '<div style="color:var(--text4);font-size:13px;text-align:center;padding:20px">No expenses this month</div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// AI INSIGHT (local heuristics + optional Claude API)
+// ══════════════════════════════════════════════════════════
+async function refreshAIInsight() { await refreshDashboard(); }
+
+function renderAIInsightLocal({ todayRevenue=0, todayTxns=0, critical=0, low=0, monthRevenue=0, expTotal=0, profit=0, margin=0 }) {
+  const apiKey = getSettings().apiKey;
+  const el = document.getElementById('aiInsight');
+  if (apiKey && apiKey.startsWith('sk-ant-')) {
+    // Try Claude API
+    callClaudeAdvisor(apiKey, { todayRevenue, todayTxns, critical, low, monthRevenue, expTotal, profit, margin });
+    return;
+  }
+  // Local heuristics
+  let insight = '';
+  const bizName = getSettings().bizName;
+  if (todayRevenue === 0 && todayTxns === 0) {
+    insight = `No sales recorded yet today for ${bizName}. Ensure your POS is set up and products are added to Supabase.`;
+  } else if (critical > 0) {
+    insight = `⚠️ <strong>${critical} product${critical>1?'s':''}</strong> are completely out of stock — restock immediately to avoid lost sales. ` +
+              (low > 0 ? `An additional ${low} item${low>1?'s':''} are running low.` : '');
+  } else if (profit < 0) {
+    insight = `This month's expenses (${currency} ${fmt(expTotal)}) exceed revenue (${currency} ${fmt(monthRevenue)}). Review spending categories and consider adjusting pricing.`;
+  } else if (margin > 40) {
+    insight = `Excellent margin of <strong>${margin}%</strong> this month! Today ${todayTxns} transaction${todayTxns!==1?'s':''} totalling ${currency} ${fmt(todayRevenue)}. Consider reinvesting profit into inventory.`;
+  } else if (todayTxns > 0) {
+    insight = `Today: <strong>${todayTxns} sale${todayTxns!==1?'s':''}</strong> · ${currency} ${fmt(todayRevenue)}. Monthly margin stands at ${margin}%. ` +
+              (low > 0 ? `Watch your low-stock items (${low}) to avoid running out.` : 'Stock levels look healthy.');
+  } else {
+    insight = `Monthly revenue: ${currency} ${fmt(monthRevenue)} with a ${margin}% margin. Add your Anthropic API key in Settings for personalised AI advice.`;
+  }
+  el.innerHTML = `<button class="ai-refresh-btn" onclick="refreshAIInsight()">Refresh</button>${insight}`;
+}
+
+async function callClaudeAdvisor(apiKey, metrics) {
+  const el = document.getElementById('aiInsight');
+  el.innerHTML = '<button class="ai-refresh-btn" onclick="refreshAIInsight()">Refresh</button>⏳ Getting AI insight…';
+  const biz = getSettings().bizName;
+  const prompt = `You are a concise business advisor for ${biz}, an East African SME. Given these metrics:
+- Today's revenue: ${currency} ${fmt(metrics.todayRevenue)} (${metrics.todayTxns} transactions)
+- Monthly revenue: ${currency} ${fmt(metrics.monthRevenue)}, expenses: ${currency} ${fmt(metrics.expTotal)}, profit margin: ${metrics.margin}%
+- Stock alerts: ${metrics.critical} critical (out), ${metrics.low} low
+Give 2-3 specific, actionable insights in 3 short sentences. Be direct and practical.`;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'x-api-key': apiKey, 'anthropic-version':'2023-06-01' },
+      body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:200, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || 'Could not get insight.';
+    el.innerHTML = `<button class="ai-refresh-btn" onclick="refreshAIInsight()">Refresh</button>${text}`;
+  } catch(e) {
+    el.innerHTML = `<button class="ai-refresh-btn" onclick="refreshAIInsight()">Refresh</button>AI advisor unavailable. Check your API key in Settings.`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll(`[data-page="${name}"]`).forEach(n => n.classList.add('active'));
+  closeSidebar();
+
+  // Lazy-load data
+  if (name === 'dashboard')  refreshDashboard();
+  if (name === 'pos')        loadProducts();
+  if (name === 'sales')      loadSales();
+  if (name === 'inventory')  loadInventory();
+  if (name === 'expenses')   loadExpensesPage();
+  if (name === 'suppliers')  loadSuppliers();
+  if (name === 'staff')      loadStaff();
+}
+
+// ══════════════════════════════════════════════════════════
+// MOBILE SIDEBAR
+// ══════════════════════════════════════════════════════════
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').style.display =
+    document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+function toast(msg, type='info') {
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]||'💬'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'toastOut 0.3s var(--ease) forwards';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+// ══════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════
+function fmt(n) {
+  return Number(n||0).toLocaleString('en-UG', { minimumFractionDigits:0, maximumFractionDigits:0 });
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-UG', { dateStyle:'medium', timeStyle:'short' });
+}
+
+// ══════════════════════════════════════════════════════════
+// SERVICE WORKER REGISTRATION
+// ══════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════
+async function boot() {
+  applySettings();
+  initSupabase();
+  await initIndexedDB();
+  updateConnectionUI();
+  refreshDashboard();
+  loadProducts();
+  syncOfflineSales();
+  // Periodically check for pending sync
+  setInterval(syncOfflineSales, 30000);
+}
+
+boot();
+</script>
+</body>
+</html>
