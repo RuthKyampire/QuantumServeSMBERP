@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>QuantumServe Core ERP</title>
+<link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:       #08080c;
+  --ink2:      #0f0f14;
+  --ink3:      #17171f;
+  --ink4:      #1f1f2a;
+  --ink5:      #2a2a38;
+  --line:      rgba(255,255,255,0.06);
+  --line2:     rgba(255,255,255,0.10);
+  --gold:      #e8b84b;
+  --gold2:     #f5d080;
+  --gold-dim:  rgba(232,184,75,0.10);
+  --gold-glow: rgba(232,184,75,0.20);
+  --snow:      #f0ede8;
+  --snow2:     rgba(240,237,232,0.55);
+  --snow3:     rgba(240,237,232,0.25);
+  --snow4:     rgba(240,237,232,0.10);
+  --green:     #34d399;
+  --green-dim: rgba(52,211,153,0.10);
+  --red:       #f87171;
+  --red-dim:   rgba(248,113,113,0.10);
+  --amber:     #fbbf24;
+  --amber-dim: rgba(251,191,36,0.10);
+  --r:         10px;
+  --r2:        16px;
+  --r3:        22px;
+  --nav:       260px;
+  --top:       56px;
+  --ease:      cubic-bezier(0.22,1,0.36,1);
+  --fh: 'Syne', sans-serif;
+  --fb: 'DM Sans', sans-serif;
+  --fm: 'DM Mono', monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{font-family:var(--fb);background:var(--ink);color:var(--snow);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--ink5);border-radius:3px;}
+#loginScreen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:2000;padding:20px;}
+#loginScreen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 50%,rgba(232,184,75,0.07) 0%,transparent 70%),radial-gradient(ellipse 40% 60% at 80% 20%,rgba(232,184,75,0.04) 0%,transparent 60%);pointer-events:none;}
+.lw{width:100%;max-width:400px;position:relative;z-index:1;}
+.lb{text-align:center;margin-bottom:32px;}
+.lb-logo{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:linear-gradient(135deg,var(--gold),#a07020);border-radius:14px;margin-bottom:14px;box-shadow:0 0 40px rgba(232,184,75,0.25);overflow:hidden;}
+.lb-logo img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.lb-logo-fallback{font-family:var(--fh);font-size:22px;font-weight:800;color:var(--ink);}
+.lb h1{font-family:var(--fh);font-size:26px;font-weight:700;color:var(--snow);letter-spacing:-0.02em;margin-bottom:4px;}
+.lb p{font-size:12px;color:var(--snow3);letter-spacing:0.08em;text-transform:uppercase;}
+.lc{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r3);padding:28px;box-shadow:0 24px 80px rgba(0,0,0,0.5);}
+.lf{margin-bottom:14px;}
+.lf label{display:block;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--snow3);margin-bottom:6px;}
+.lf input{width:100%;padding:12px 14px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);color:var(--snow);font-family:var(--fb);font-size:14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none;appearance:none;}
+.lf input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,75,0.12);}
+.lf input::placeholder{color:var(--snow4);}
+.btn-g{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold) 0%,#b8860b 100%);color:var(--ink);border:none;border-radius:var(--r);font-family:var(--fh);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.02em;transition:opacity 0.2s,transform 0.15s;margin-top:6px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.btn-g:hover{opacity:0.92;}
+.btn-g:active{transform:scale(0.98);opacity:0.85;}
+.btn-g:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.lmsg{margin-top:12px;padding:10px 14px;border-radius:var(--r);font-size:13px;display:none;}
+.lmsg.err{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
+.lmsg.ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,0.2);}
+.lmsg.inf{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(232,184,75,0.2);}
+#app{display:none;}
+#nav{position:fixed;left:0;top:0;width:var(--nav);height:100vh;background:var(--ink2);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:500;transition:transform 0.3s var(--ease);overflow:hidden;}
+.nh{display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid var(--line);flex-shrink:0;}
+.nh-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),#7a5010);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.nh-logo img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
+.nh-logo-fallback{font-family:var(--fh);font-size:14px;font-weight:800;color:var(--ink);}
+.nh-t{line-height:1.25;}
+.nh-name{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--snow);}
+.nh-sub{font-size:9px;color:var(--snow3);letter-spacing:0.08em;text-transform:uppercase;}
+.nbiz{margin:8px;padding:9px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);cursor:pointer;transition:border-color 0.2s;flex-shrink:0;}
+.nbiz:hover{border-color:var(--line2);}
+.nbiz-name{font-size:12px;font-weight:500;color:var(--snow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nbiz-role{font-size:9px;color:var(--gold);letter-spacing:0.06em;text-transform:uppercase;margin-top:2px;}
+.ns{flex:1;overflow-y:auto;padding:4px 6px;}
+.ns-sec{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--snow4);padding:12px 10px 4px;font-weight:600;}
+.ni{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--snow2);transition:all 0.15s;position:relative;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;margin-bottom:1px;}
+.ni:hover{background:var(--ink3);color:var(--snow);}
+.ni.on{background:var(--gold-dim);color:var(--gold);}
+.ni.on::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:16px;background:var(--gold);border-radius:0 3px 3px 0;}
+.ni-ic{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.nf{padding:10px;border-top:1px solid var(--line);flex-shrink:0;}
+.cpill{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--ink3);border-radius:8px;font-size:11px;color:var(--snow2);}
+.cdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0;transition:all 0.3s;}
+.cdot.off{background:var(--red);box-shadow:0 0 6px var(--red);}
+#topbar{display:none;position:fixed;top:0;left:0;right:0;height:var(--top);background:var(--ink2);border-bottom:1px solid var(--line);align-items:center;padding:0 16px;gap:12px;z-index:400;}
+.tbmenu{background:none;border:none;color:var(--snow);font-size:20px;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;}
+.tbtitle{font-family:var(--fh);font-size:15px;font-weight:700;color:var(--gold);flex:1;}
+#nOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:499;backdrop-filter:blur(2px);}
+#main{margin-left:var(--nav);min-height:100vh;padding:26px;}
+.page{display:none;}
+.page.on{display:block;animation:fi 0.2s var(--ease);}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+.ph-l h2{font-family:var(--fh);font-size:22px;font-weight:700;color:var(--snow);letter-spacing:-0.02em;}
+.ph-l p{font-size:12px;color:var(--snow3);margin-top:2px;}
+.ph-r{display:flex;gap:8px;flex-wrap:wrap;}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:20px;margin-bottom:14px;}
+.ct{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--snow3);margin-bottom:16px;}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.kpi{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden;transition:border-color 0.2s;}
+.kpi:hover{border-color:var(--line2);}
+.kl{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--snow3);margin-bottom:8px;}
+.kv{font-family:var(--fm);font-size:20px;font-weight:500;color:var(--snow);}
+.kv.g{color:var(--gold);}
+.kv.pos{color:var(--green);}
+.kv.neg{color:var(--red);}
+.ki{position:absolute;right:14px;top:14px;font-size:18px;opacity:0.15;}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.ps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.pi{background:var(--ink3);border-radius:var(--r);padding:14px;}
+.pl{font-size:10px;color:var(--snow3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;}
+.pv{font-family:var(--fm);font-size:16px;font-weight:500;}
+.pv.pos{color:var(--green);}
+.pv.neg{color:var(--red);}
+.pv.g{color:var(--gold);}
+.pos-wrap{display:grid;grid-template-columns:1fr 360px;gap:14px;height:calc(100vh - 108px);}
+.pos-l{display:flex;flex-direction:column;overflow:hidden;}
+.psrch{width:100%;padding:11px 14px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r);color:var(--snow);font-family:var(--fb);font-size:13px;outline:none;margin-bottom:12px;flex-shrink:0;transition:border-color 0.2s;-webkit-appearance:none;}
+.psrch:focus{border-color:var(--gold);}
+.psrch::placeholder{color:var(--snow4);}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;overflow-y:auto;flex:1;padding-right:4px;}
+.ptile{background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px 10px;cursor:pointer;text-align:center;transition:all 0.15s var(--ease);-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.ptile:hover{border-color:var(--gold);background:var(--gold-dim);transform:translateY(-1px);}
+.ptile.oos{opacity:0.4;pointer-events:none;}
+.pe{font-size:24px;margin-bottom:6px;}
+.pn{font-size:12px;font-weight:500;margin-bottom:3px;line-height:1.3;}
+.pp{font-family:var(--fm);font-size:12px;color:var(--gold);}
+.pst{font-size:10px;color:var(--snow3);margin-top:2px;}
+.cart{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);display:flex;flex-direction:column;overflow:hidden;}
+.cart-hd{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.cart-ht{font-family:var(--fh);font-size:13px;font-weight:600;}
+.cart-cl{background:none;border:1px solid var(--line2);color:var(--snow3);border-radius:6px;font-size:10px;padding:3px 8px;cursor:pointer;transition:all 0.2s;font-family:var(--fb);-webkit-tap-highlight-color:transparent;}
+.cart-cl:hover{border-color:var(--red);color:var(--red);}
+.cart-bd{flex:1;overflow-y:auto;padding:8px 14px;}
+.cart-empty{text-align:center;padding:36px 16px;color:var(--snow4);font-size:13px;}
+.crow{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);}
+.crow:last-child{border-bottom:none;}
+.crow-info{flex:1;min-width:0;}
+.crow-n{font-size:13px;font-weight:500;margin-bottom:3px;}
+.crow-price-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.price-edit{font-family:var(--fm);font-size:12px;width:90px;padding:3px 7px;background:var(--ink4);border:1px solid var(--gold);border-radius:6px;color:var(--gold);outline:none;text-align:right;-webkit-appearance:none;appearance:none;}
+.price-edit:focus{box-shadow:0 0 0 2px rgba(232,184,75,0.15);}
+.price-was{font-size:10px;color:var(--snow4);text-decoration:line-through;}
+.price-label{font-size:10px;color:var(--snow3);}
+.qw{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.qb{width:23px;height:23px;border-radius:50%;background:var(--ink4);border:1px solid var(--line2);color:var(--snow);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;line-height:1;-webkit-tap-highlight-color:transparent;}
+.qb:hover{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
+.qn{font-family:var(--fm);font-size:12px;min-width:18px;text-align:center;}
+.crow-t{font-family:var(--fm);font-size:12px;font-weight:500;min-width:72px;text-align:right;flex-shrink:0;padding-top:2px;}
+.cart-ft{padding:13px 16px;border-top:1px solid var(--line);flex-shrink:0;}
+.ctrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.ct-lbl{font-size:13px;color:var(--snow2);}
+.ct-val{font-family:var(--fm);font-size:20px;font-weight:500;color:var(--gold);}
+.btn-co{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#8a6010);color:var(--ink);border:none;border-radius:var(--r);font-family:var(--fh);font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.btn-co:hover{opacity:0.9;transform:translateY(-1px);box-shadow:0 4px 20px rgba(232,184,75,0.3);}
+.btn-co:active{transform:none;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--snow3);border-bottom:1px solid var(--line);}
+.tbl td{padding:10px 12px;font-size:13px;color:var(--snow2);border-bottom:1px solid var(--line);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(255,255,255,0.015);}
+.mono{font-family:var(--fm);font-size:12px;}
+.badge{display:inline-block;font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:20px;}
+.bg{background:var(--green-dim);color:var(--green);}
+.br{background:var(--red-dim);color:var(--red);}
+.ba{background:var(--amber-dim);color:var(--amber);}
+.bd{background:var(--gold-dim);color:var(--gold);}
+.btn{padding:7px 14px;background:var(--ink3);border:1px solid var(--line2);color:var(--snow2);border-radius:var(--r);font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;}
+.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn-primary{padding:7px 16px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--ink);border:none;border-radius:var(--r);font-family:var(--fh);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+.btn-primary:active{transform:none;}
+.btn-danger{padding:5px 10px;background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);color:var(--red);border-radius:6px;font-family:var(--fb);font-size:11px;cursor:pointer;transition:all 0.2s;}
+.btn-danger:hover{background:rgba(248,113,113,0.2);}
+.btn-pdf{padding:7px 16px;background:var(--ink3);border:1px solid rgba(52,211,153,0.3);color:var(--green);border-radius:var(--r);font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;}
+.btn-pdf:hover{background:var(--green-dim);border-color:var(--green);}
+.fg{margin-bottom:15px;}
+.fl{display:block;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--snow3);margin-bottom:6px;}
+.fi,.fs{width:100%;padding:10px 14px;background:var(--ink3);border:1px solid var(--line2);color:var(--snow);border-radius:var(--r);font-family:var(--fb);font-size:13px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;}
+.fi:focus,.fs:focus{border-color:var(--gold);}
+.fi::placeholder{color:var(--snow4);}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);animation:fi 0.15s var(--ease);}
+.modal{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r3);padding:26px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.modal h3{font-family:var(--fh);font-size:17px;font-weight:700;color:var(--snow);margin-bottom:20px;}
+.modal-ft{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
+.inv-tabs{display:flex;gap:0;border:1px solid var(--line2);border-radius:var(--r);overflow:hidden;margin-bottom:18px;width:fit-content;}
+.inv-tab{padding:8px 20px;font-size:12px;font-weight:600;letter-spacing:0.04em;cursor:pointer;background:transparent;color:var(--snow3);border:none;transition:all 0.2s;font-family:var(--fb);}
+.inv-tab.on{background:var(--gold-dim);color:var(--gold);}
+.inv-tab:hover:not(.on){color:var(--snow);background:var(--ink3);}
+.rep-filters{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px;}
+.rep-filters .fg{margin-bottom:0;}
+.rep-filters label{display:block;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--snow3);margin-bottom:6px;}
+.rep-filters input[type=date]{padding:9px 12px;background:var(--ink3);border:1px solid var(--line2);color:var(--snow);border-radius:var(--r);font-family:var(--fb);font-size:13px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;color-scheme:dark;}
+.rep-filters input[type=date]:focus{border-color:var(--gold);}
+.rep-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+#toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);padding:11px 16px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:tin 0.3s var(--ease);max-width:300px;pointer-events:auto;}
+.toast.s{border-color:rgba(52,211,153,0.3);}
+.toast.e{border-color:rgba(248,113,113,0.3);}
+.toast.i{border-color:rgba(232,184,75,0.3);}
+@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+#ofl{position:fixed;top:0;left:50%;transform:translateX(-50%);background:var(--red-dim);border:1px solid rgba(248,113,113,0.3);color:var(--red);padding:6px 20px;border-radius:0 0 10px 10px;font-size:11px;z-index:9000;display:none;}
+#printArea{display:none;}
+#legalModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+#legalModal.open{display:flex;}
+.lm-box{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r3);width:100%;max-width:680px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 32px 100px rgba(0,0,0,0.7);overflow:hidden;}
+.lm-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line2);flex-shrink:0;}
+.lm-title{font-family:var(--fh);font-size:15px;font-weight:700;color:var(--gold);letter-spacing:-0.01em;}
+.lm-close{background:var(--ink4);border:1px solid var(--line2);color:var(--snow2);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
+.lm-close:hover{border-color:var(--red);color:var(--red);}
+.lm-body{flex:1;overflow-y:auto;padding:24px;font-size:12.5px;line-height:1.75;color:var(--snow2);white-space:pre-wrap;}
+.lm-body h3{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin:20px 0 8px;}
+.lm-body strong{color:var(--snow);}
+.lm-ft{padding:14px 24px;border-top:1px solid var(--line2);text-align:center;font-size:10px;color:var(--snow4);flex-shrink:0;}
+@media(max-width:900px){
+  #nav{transform:translateX(-100%);width:260px;}
+  #nav.open{transform:translateX(0);}
+  #nOverlay.open{display:block;}
+  #topbar{display:flex;}
+  #main{margin-left:0;padding:calc(var(--top) + 18px) 14px 18px;}
+  .kg{grid-template-columns:1fr 1fr;}
+  .dg{grid-template-columns:1fr;}
+  .pos-wrap{grid-template-columns:1fr;height:auto;}
+  .ps{grid-template-columns:1fr 1fr;}
+  .fgrid{grid-template-columns:1fr;}
+  .fgrid3{grid-template-columns:1fr;}
+  .rep-kpis{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:480px){
+  .kg{grid-template-columns:1fr 1fr;}
+  .lc{padding:22px 18px;}
+  #main{padding:calc(var(--top) + 14px) 12px 14px;}
+  .rep-kpis{grid-template-columns:1fr;}
+  .ps{grid-template-columns:1fr 1fr;}
+}
+@media print{
+  body>*:not(#printArea){display:none!important;}
+  #printArea{display:block!important;position:fixed;inset:0;background:#fff;color:#111;padding:28px 32px;font-family:Arial,sans-serif;font-size:12px;}
+  #printArea h2{font-size:18px;margin-bottom:2px;color:#0a0a18;}
+  #printArea .pr-meta{font-size:11px;color:#666;margin-bottom:16px;}
+  #printArea .pr-kpis{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  #printArea .pr-kpi{border:1px solid #ddd;border-radius:6px;padding:10px 14px;min-width:110px;}
+  #printArea .pr-kpi-l{font-size:9px;text-transform:uppercase;color:#888;margin-bottom:3px;}
+  #printArea .pr-kpi-v{font-size:15px;font-weight:700;color:#0a0a18;}
+  #printArea .pr-kpi-v.pos{color:#059669;}
+  #printArea .pr-kpi-v.neg{color:#dc2626;}
+  #printArea .pr-sec{margin-bottom:20px;}
+  #printArea .pr-sec-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:8px;}
+  #printArea table{width:100%;border-collapse:collapse;font-size:11px;}
+  #printArea th{text-align:left;padding:5px 8px;background:#f5f5f5;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:#555;border-bottom:2px solid #ddd;}
+  #printArea td{padding:5px 8px;border-bottom:1px solid #f0f0f0;color:#333;}
+  #printArea .pr-footer{margin-top:20px;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:8px;}
+}
+</style>
+</head>
+<body>
+<div id="printArea"></div>
+<div id="loginScreen">
+  <div class="lw">
+    <div class="lb">
+      <div class="lb-logo">
+        <img src="icons/icon-128x128.png" alt="QuantumServe" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <span class="lb-logo-fallback" style="display:none">Q</span>
+      </div>
+      <h1>QuantumServe</h1>
+      <p>Core ERP</p>
+    </div>
+    <div class="lc">
+      <div class="lf"><label>Email Address</label><input type="email" id="lE" placeholder="your@email.com" autocomplete="username"></div>
+      <div class="lf"><label>Password</label><input type="password" id="lP" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn-g" id="lB">Sign In</button>
+      <div id="lM" class="lmsg"></div>
+      <div style="margin-top:14px;padding:0 2px;text-align:center;font-size:11px;color:rgba(240,237,232,0.35);line-height:1.6;">
+        By clicking <strong style="color:rgba(240,237,232,0.5)">"Sign In"</strong> or using the Software, you accept the applicable
+        <a href="#" onclick="openLegalModal('terms');return false;" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(232,184,75,0.3);">Terms &amp; Conditions</a>
+        and
+        <a href="#" onclick="openLegalModal('privacy');return false;" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(232,184,75,0.3);">Privacy Policy</a>
+        of Quantum Solutions.
+      </div>
+    </div>
+  </div>
+</div>
+<div id="ofl">📡 Offline — changes will sync on reconnect</div>
+<div id="app">
+  <div id="nOverlay"></div>
+  <nav id="nav">
+    <div class="nh">
+      <div class="nh-logo">
+        <img src="icons/icon-48x48.png" alt="Q" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <span class="nh-logo-fallback" style="display:none">Q</span>
+      </div>
+      <div class="nh-t"><div class="nh-name">QuantumServe</div><div class="nh-sub">Core ERP</div></div>
+    </div>
+    <div class="nbiz" id="nBiz"><div class="nbiz-name" id="nBizN">My Business</div><div class="nbiz-role" id="nBizR">—</div></div>
+    <div class="ns">
+      <div class="ns-sec">Core</div>
+      <div class="ni" data-p="dashboard"><span class="ni-ic">◈</span>Dashboard</div>
+      <div class="ni" data-p="pos"><span class="ni-ic">💳</span>Point of Sale</div>
+      <div class="ns-sec">Records</div>
+      <div class="ni" data-p="sales"><span class="ni-ic">📈</span>Sales History</div>
+      <div class="ni" data-p="inventory"><span class="ni-ic">📦</span>Inventory</div>
+      <div class="ni" data-p="expenses"><span class="ni-ic">🧾</span>Expenses</div>
+      <div class="ni" data-p="reports"><span class="ni-ic">📊</span>Reports</div>
+      <div class="ni" data-p="suppliers"><span class="ni-ic">🤝</span>Suppliers</div>
+      <div class="ns-sec">Admin</div>
+      <div class="ni" data-p="staff"><span class="ni-ic">👥</span>Staff</div>
+      <div class="ni" data-p="settings"><span class="ni-ic">⚙</span>Settings</div>
+      <div class="ni" id="nOut"><span class="ni-ic">↩</span>Sign Out</div>
+    </div>
+    <div class="nf"><div class="cpill"><div class="cdot" id="cDot"></div><span id="cLbl">Connected</span></div></div>
+  </nav>
+  <div id="topbar"><button class="tbmenu" id="mBtn">☰</button><div class="tbtitle">QuantumServe</div></div>
+  <main id="main">
+    <section class="page" id="p-dashboard">
+      <div class="ph"><div class="ph-l"><h2>Dashboard</h2><p id="dSub">Loading…</p></div><button class="btn" onclick="loadDash()">↻ Refresh</button></div>
+      <div class="kg">
+        <div class="kpi"><div class="kl">Today's Revenue</div><div class="kv g" id="kR">—</div><div class="ki">💰</div></div>
+        <div class="kpi"><div class="kl">Transactions</div><div class="kv" id="kT">—</div><div class="ki">🧾</div></div>
+        <div class="kpi"><div class="kl">Stock Alerts</div><div class="kv" id="kS">—</div><div class="ki">⚠️</div></div>
+        <div class="kpi"><div class="kl">Month Expenses</div><div class="kv" id="kE">—</div><div class="ki">💳</div></div>
+      </div>
+      <div class="card" id="expDashCard"><div class="ct">Expenses — This Month</div><div id="expDashStrip" style="color:var(--snow4);font-size:13px">Loading…</div></div>
+      <div class="card" id="pCard" style="display:none"><div class="ct">Profit Snapshot — This Month</div><div class="ps" id="pStrip"></div></div>
+    </section>
+    <section class="page" id="p-pos">
+      <div class="ph"><div class="ph-l"><h2>Point of Sale</h2><p>Tap to add · Edit price to haggle · Sells offline</p></div><button class="btn" id="syncBtn" onclick="syncQueue()" style="color:var(--green)">↑ Synced</button></div>
+      <div class="pos-wrap">
+        <div class="pos-l"><input type="text" class="psrch" id="posQ" placeholder="Search products…"><div class="pgrid" id="pGrid"></div></div>
+        <div class="cart">
+          <div class="cart-hd"><span class="cart-ht">🛒 Cart</span><button class="cart-cl" onclick="clearCart()">Clear</button></div>
+          <div class="cart-bd" id="cartBd"><div class="cart-empty">Cart is empty</div></div>
+          <div class="cart-ft"><div class="ctrow"><span class="ct-lbl">Total</span><span class="ct-val" id="cTotal">0</span></div><button class="btn-co" onclick="checkout()">Complete Sale →</button></div>
+        </div>
+      </div>
+    </section>
+    <section class="page" id="p-sales">
+      <div class="ph"><div class="ph-l"><h2>Sales History</h2></div><button class="btn" onclick="loadSales()">↻ Refresh</button></div>
+      <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date & Time</th><th>Product</th><th>Qty</th><th>Total</th></tr></thead><tbody id="sBody"></tbody></table></div>
+    </section>
+    <section class="page" id="p-inventory">
+      <div class="ph"><div class="ph-l"><h2>Inventory</h2><p>Products &amp; Stock Management</p></div><button class="btn" onclick="loadInv()">↻ Refresh</button></div>
+      <div class="inv-tabs">
+        <button class="inv-tab on" id="invTab-products" onclick="switchInvTab('products')">📋 Products</button>
+        <button class="inv-tab" id="invTab-stock" onclick="switchInvTab('stock')">📦 Add Stock</button>
+      </div>
+      <div id="invPanel-products">
+        <div class="card" id="addProdCard">
+          <div class="ct">Add New Product</div>
+          <div class="fgrid">
+            <div class="fg"><label class="fl">Product Name</label><input class="fi" id="prodName" placeholder="e.g. Irish Potatoes 90kg"></div>
+            <div class="fg"><label class="fl">Unit of Measure</label><select class="fs" id="prodUnit"><option value="">Select unit…</option><option value="Pieces">Pieces</option><option value="Bags">Bags</option><option value="Kg">Kg</option><option value="G">Grams (g)</option><option value="Litres">Litres</option><option value="Ml">Ml</option><option value="Boxes">Boxes</option><option value="Cartons">Cartons</option><option value="Dozens">Dozens</option><option value="Metres">Metres</option><option value="Other">Other</option></select></div>
+            <div class="fg"><label class="fl">Category (optional)</label><input class="fi" id="prodCat" placeholder="e.g. Food, Clothing…"></div>
+          </div>
+          <button class="btn-primary" onclick="addProduct()">+ Add Product</button>
+        </div>
+        <div class="card" style="overflow-x:auto"><div class="ct">All Products</div><table class="tbl"><thead><tr><th>Product Name</th><th>Unit</th><th>Selling Price</th><th id="cTh" style="display:none">Cost Price</th><th>Stock</th><th>Low Alert</th><th>Status</th><th id="actTh" style="display:none">Actions</th></tr></thead><tbody id="iBody"></tbody></table></div>
+      </div>
+      <div id="invPanel-stock" style="display:none">
+        <div class="card"><div class="ct">Add Stock Entry</div>
+          <div class="fgrid">
+            <div class="fg"><label class="fl">Product</label><select class="fs" id="stkProd" onchange="onStockProductChange()"><option value="">Select product…</option></select></div>
+            <div class="fg"><label class="fl">Unit</label><input class="fi" id="stkUnit" readonly placeholder="Auto from product" style="opacity:0.6"></div>
+            <div class="fg"><label class="fl">Previous Stock</label><input class="fi" id="stkPrev" readonly placeholder="Auto-filled" style="opacity:0.6"></div>
+            <div class="fg"><label class="fl">Quantity to Add <span style="color:var(--red)">*</span></label><input class="fi" id="stkQty" type="number" placeholder="0" min="1"></div>
+            <div class="fg"><label class="fl">Buying Price / unit <span style="color:var(--red)">*</span></label><input class="fi" id="stkBuy" type="number" placeholder="0" min="0"></div>
+            <div class="fg"><label class="fl">Selling Price / unit <span style="color:var(--red)">*</span></label><input class="fi" id="stkSellPrice" type="number" placeholder="0" min="0"></div>
+            <div class="fg"><label class="fl">Supplier</label><div style="display:flex;gap:8px;align-items:center"><select class="fs" id="stkSup" style="flex:1"><option value="">Select supplier…</option></select><button class="btn" onclick="showAddSupplierModal()" style="flex-shrink:0;white-space:nowrap">+ New</button></div></div>
+            <div class="fg"><label class="fl">Invoice Number</label><input class="fi" id="stkInv" placeholder="INV-0001"></div>
+            <div class="fg"><label class="fl">Low Stock Alert Threshold</label><input class="fi" id="stkAlert" type="number" placeholder="e.g. 10" min="0"></div>
+          </div>
+          <button class="btn-primary" onclick="addStock()">+ Save Stock Entry</button>
+        </div>
+        <div class="card" style="overflow-x:auto"><div class="ct">Recent Stock Entries</div><table class="tbl"><thead><tr><th>Date</th><th>Product</th><th>Unit</th><th>Qty Added</th><th>Buying Price</th><th>Supplier</th><th>Invoice</th></tr></thead><tbody id="stkBody"></tbody></table></div>
+      </div>
+    </section>
+    <section class="page" id="p-expenses">
+      <div class="ph"><div class="ph-l"><h2>Expenses</h2><p>Track business expenses</p></div><button class="btn" onclick="loadExp()">↻ Refresh</button></div>
+      <div class="card"><div class="ct">Record Expense</div>
+        <div class="fgrid">
+          <div class="fg"><label class="fl">Date of Expense</label><input class="fi" id="expDate" type="date"></div>
+          <div class="fg"><label class="fl">Category</label><select class="fs" id="expCat"><option value="">Select category…</option><option value="rent">Rent</option><option value="utilities">Utilities</option><option value="salaries">Salaries</option><option value="supplies">Supplies</option><option value="marketing">Marketing</option><option value="maintenance">Maintenance</option><option value="transport">Transport</option><option value="stock_purchase">Stock Purchase</option><option value="licensing">Licensing</option><option value="other">Other</option></select></div>
+          <div class="fg" style="grid-column:1/-1"><label class="fl">Description / Note</label><input class="fi" id="expDesc" placeholder="What was the expense for?"></div>
+          <div class="fg"><label class="fl">Amount</label><input class="fi" id="expAmt" type="number" placeholder="0" min="0"></div>
+          <div class="fg"><label class="fl">Period Type</label><select class="fs" id="expPeriod"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="annual">Annual</option></select></div>
+        </div>
+        <button class="btn-primary" onclick="addExpense()">+ Save Expense</button>
+      </div>
+      <div class="card" style="overflow-x:auto"><div class="ct" id="expTableTitle">Expenses</div><table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Period</th><th>Added By</th></tr></thead><tbody id="eBody"></tbody></table></div>
+    </section>
+    <section class="page" id="p-reports">
+      <div class="ph"><div class="ph-l"><h2>Reports</h2><p id="repRoleNote">Loading…</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="runReport()">↻ Run</button><button class="btn-pdf" onclick="exportPDF()">⬇ Export PDF</button></div></div>
+      <div class="card"><div class="ct">Select Date Range</div><div class="rep-filters"><div class="fg"><label>From</label><input type="date" id="repFrom"></div><div class="fg"><label>To</label><input type="date" id="repTo"></div><button class="btn-primary" onclick="runReport()">Generate</button></div></div>
+      <div class="rep-kpis">
+        <div class="kpi"><div class="kl">Total Sales</div><div class="kv g" id="repSales">—</div><div class="ki">📈</div></div>
+        <div class="kpi"><div class="kl">Total Expenses</div><div class="kv" id="repExp">—</div><div class="ki">💳</div></div>
+        <div class="kpi" id="repPLKpi" style="display:none"><div class="kl">Net Profit / Loss</div><div class="kv" id="repPL">—</div><div class="ki">📊</div></div>
+      </div>
+      <div class="card" style="overflow-x:auto"><div class="ct">Sales in Period</div><table class="tbl"><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th><th>By</th></tr></thead><tbody id="repSalesBody"></tbody></table></div>
+      <div class="card" style="overflow-x:auto"><div class="ct">Expenses in Period</div><table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Period</th><th>By</th></tr></thead><tbody id="repExpBody"></tbody></table></div>
+      <div id="plSection" style="display:none"><div class="card"><div class="ct">Profit &amp; Loss</div><div class="ps" id="plStrip"></div></div></div>
+    </section>
+    <section class="page" id="p-suppliers">
+      <div class="ph"><div class="ph-l"><h2>Suppliers</h2><p>Auto-populated from stock entries</p></div><button class="btn" onclick="loadSup()">↻ Refresh</button></div>
+      <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Supplier</th><th>Products Supplied</th><th>Last Delivery</th><th>Total Spent</th></tr></thead><tbody id="supB"></tbody></table></div>
+    </section>
+    <div id="addSupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1001;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);">
+      <div style="background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r3);padding:26px;width:100%;max-width:400px;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+        <h3 style="font-family:var(--fh);font-size:16px;font-weight:700;color:var(--snow);margin-bottom:18px;">Add New Supplier</h3>
+        <div class="fg"><label class="fl">Supplier Name</label><input class="fi" id="newSupName" placeholder="e.g. Kampala Wholesale Ltd"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;"><button class="btn" onclick="hideAddSupplierModal()">Cancel</button><button class="btn-primary" onclick="saveNewSupplier()">Save Supplier</button></div>
+      </div>
+    </div>
+    <section class="page" id="p-staff">
+      <div class="ph"><div class="ph-l"><h2>Staff</h2></div></div>
+      <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody id="stfB"></tbody></table></div>
+    </section>
+    <section class="page" id="p-settings">
+      <div class="ph"><div class="ph-l"><h2>Settings</h2></div></div>
+      <div class="card">
+        <div class="fg"><label class="fl">Business Name</label><input class="fi" id="sBiz" placeholder="My Business"></div>
+        <div class="fg"><label class="fl">Currency</label><select class="fs" id="sCur"><option value="UGX">UGX — Ugandan Shilling</option><option value="USD">USD — US Dollar</option><option value="KES">KES — Kenyan Shilling</option><option value="TZS">TZS — Tanzanian Shilling</option></select></div>
+        <button class="btn-g" style="width:auto;padding:10px 28px" onclick="saveSets()">Save Settings</button>
+      </div>
+      <div class="card" style="margin-top:14px"><label class="fl">Signed in as</label><div id="sUser" style="font-size:13px;color:var(--snow2)">—</div></div>
+    </section>
+  </main>
+</div>
+<div id="toasts"></div>
+<div id="legalModal" role="dialog" aria-modal="true" aria-labelledby="lmTitle">
+  <div class="lm-box">
+    <div class="lm-hd"><span class="lm-title" id="lmTitle">Quantum Solutions — Legal Agreement</span><button class="lm-close" onclick="closeLegalModal()" aria-label="Close">✕</button></div>
+    <div class="lm-body" id="lmBody"></div>
+    <div class="lm-ft">Quantum Solutions · legal@quantumsolutionsltd.com · quantumsolutionsltd.com</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// QUANTUMSERVE CORE ERP — DEV BUILD (worker)
+// Supabase: QuantumServeSMBERP-DEV
+// ═══════════════════════════════════════════
+
+// Remove old service workers to prevent conflicts
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(r => r.forEach(sw => sw.unregister()));
+  if (window.caches) caches.keys().then(k => k.forEach(c => caches.delete(c)));
+}
+
+// ── DEV SUPABASE CREDENTIALS ──
+const SB_URL = 'https://ffbbrivvzjbtfspetqei.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmYmJyaXZ2empidGZzcGV0cWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzU4MzgsImV4cCI6MjA5MzkxMTgzOH0.e0acw03X_7ZFtH1UoGTckbuxUvj8Wst7HNkEsaVWnfI';
+
+let sb = null, sess = null, role = null;
+let prods = [], cart = [];
+let lastReportData = { from:'', to:'', salesData:[], expData:[], totalSales:0, totalExp:0, netPL:0 };
+
+const g    = id => document.getElementById(id);
+const cur  = () => localStorage.getItem('qs_cur') || 'UGX';
+const bizN = () => localStorage.getItem('qs_biz') || 'My Business';
+const isM  = () => role === 'admin' || role === 'manager';
+const esc  = s => s ? String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : '';
+const fmt  = n => cur() + ' ' + Number(n||0).toLocaleString();
+
+function toast(m, t='i') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + t;
+  el.textContent = m;
+  g('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function msg(txt, t='inf') {
+  const el = g('lM');
+  el.textContent = txt;
+  el.className = 'lmsg ' + (t==='error'?'err':t==='ok'?'ok':'inf');
+  el.style.display = 'block';
+  if (t !== 'inf') setTimeout(() => el.style.display='none', 6000);
+}
+
+// ── LEGAL MODAL ────────────────────────────
+const LEGAL_DOCS = {
+  terms: {
+    title: 'Software License & Services Terms and Conditions',
+    content: `QUANTUM SOLUTIONS
+SOFTWARE LICENSE & SERVICES TERMS AND CONDITIONS
+Last Updated: May 2026
+
+These Terms govern the use of software and services provided by Quantum Solutions.
+
+By using the Software, the Customer agrees to be bound by this Agreement.
+
+1. LICENSE GRANT
+Quantum Solutions grants a limited, non-exclusive, non-transferable license to use the Software for internal business operations. The Software is licensed and not sold.
+
+2. INTELLECTUAL PROPERTY
+All rights remain the exclusive property of Quantum Solutions. Nothing transfers ownership to the Customer.
+
+3. RESTRICTIONS
+The Customer shall not reverse engineer, copy, modify, sublicense, sell, or use the Software to build competing products.
+
+4. LIMITATION OF LIABILITY
+Quantum Solutions' total liability shall not exceed fees paid in the twelve months preceding the claim.
+
+5. GOVERNING LAW
+This Agreement is governed by the laws of the Republic of Uganda.
+
+CONTACT: legal@quantumsolutionsltd.com`
+  },
+  privacy: {
+    title: 'Data Privacy Policy',
+    content: `QUANTUM SOLUTIONS
+DATA PRIVACY POLICY
+Last Updated: May 2026
+
+DATA OWNERSHIP
+The Customer retains full ownership of all business data.
+
+DATA WE COLLECT
+• Account credentials and profile information
+• Usage analytics and operational telemetry
+• IP addresses and device/browser information
+• Legal acceptance logs for audit and compliance
+• Support and communication records
+
+DATA SHARING
+Quantum Solutions shall not sell confidential customer business data to third parties.
+
+GOVERNING LAW
+This Privacy Policy is governed by the laws of the Republic of Uganda.
+
+CONTACT: legal@quantumsolutionsltd.com`
+  }
+};
+
+function openLegalModal(docType) {
+  const doc = LEGAL_DOCS[docType];
+  if (!doc) return;
+  const modal = document.getElementById('legalModal');
+  const title = document.getElementById('lmTitle');
+  const body  = document.getElementById('lmBody');
+  if (!modal || !title || !body) return;
+  title.textContent = doc.title;
+  body.textContent  = doc.content;
+  modal.classList.add('open');
+  body.scrollTop = 0;
+  logLegalView(docType);
+}
+
+function closeLegalModal() {
+  const modal = document.getElementById('legalModal');
+  if (modal) modal.classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('legalModal');
+  if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeLegalModal(); });
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLegalModal(); });
+
+const TERMS_VERSION = 'QS-TERMS-MAY-2026';
+
+async function getClientIP() {
+  try { const r = await fetch('https://api64.ipify.org?format=json'); const d = await r.json(); return d.ip || 'unknown'; } catch(e) { return 'unknown'; }
+}
+
+async function logLegalAcceptance(userId, email) {
+  if (!sb) return;
+  try {
+    const ip = await getClientIP();
+    await sb.from('legal_acceptance_logs').insert({ user_id: userId||null, email: email||null, acceptance_type: 'login_acceptance', terms_version: TERMS_VERSION, ip_address: ip, user_agent: navigator.userAgent, accepted_at: new Date().toISOString() });
+  } catch(e) { console.warn('Legal log failed:', e.message); }
+}
+
+function logLegalView(docType) {
+  if (!sb) return;
+  sb.from('legal_acceptance_logs').insert({ user_id: sess?.uid||null, email: sess?.email||null, acceptance_type: docType==='terms'?'terms_viewed':'privacy_viewed', terms_version: TERMS_VERSION, ip_address: null, user_agent: navigator.userAgent, accepted_at: new Date().toISOString() }).then(r => { if (r.error) console.warn('View log failed:', r.error.message); });
+}
+
+// ── LOGIN ──────────────────────────────────
+async function doLogin() {
+  const email = g('lE').value.trim().toLowerCase();
+  const pass  = g('lP').value;
+  const btn   = g('lB');
+  if (!email || !pass) { msg('Enter email and password.', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  msg('Connecting to server…', 'inf');
+  try {
+    sb = window.supabase.createClient(SB_URL, SB_KEY);
+    const { data: auth, error: ae } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (ae) { msg('Login failed: ' + ae.message, 'error'); return; }
+    if (!auth?.user) { msg('No user returned. Please retry.', 'error'); return; }
+    let staff = null;
+    const { data: s1 } = await sb.from('staff').select('*').eq('auth_user_id', auth.user.id).maybeSingle();
+    staff = s1;
+    if (!staff) {
+      const { data: s2 } = await sb.from('staff').select('*').eq('email', email).maybeSingle();
+      if (s2) { await sb.from('staff').update({ auth_user_id: auth.user.id }).eq('id', s2.id); staff = s2; }
+    }
+    if (!staff) { msg('No staff record found. Contact your administrator.', 'error'); await sb.auth.signOut(); return; }
+    sess = { uid: auth.user.id, email: auth.user.email, name: staff.name, role: staff.role, sid: staff.id };
+    role = staff.role;
+    localStorage.setItem('qs_sess', JSON.stringify(sess));
+    msg('Welcome, ' + staff.name + '!', 'ok');
+    logLegalAcceptance(auth.user.id, auth.user.email);
+    setTimeout(bootApp, 700);
+  } catch (err) { msg('Error: ' + err.message, 'error'); console.error(err); }
+  finally { btn.disabled = false; btn.textContent = 'Sign In'; }
+}
+
+async function bootApp() {
+  g('loginScreen').style.display = 'none';
+  g('app').style.display = 'block';
+  if (window.innerWidth <= 900) g('topbar').style.display = 'flex';
+  g('nBizN').textContent = bizN();
+  g('nBizR').textContent = (sess?.role || '').toUpperCase();
+  await Promise.all([loadProds(), loadInv(), loadSales()]);
+  navTo('dashboard');
+  loadDash();
+  updatePendingBadge();
+}
+
+async function restoreSess() {
+  const sv = localStorage.getItem('qs_sess');
+  if (!sv) return false;
+  try {
+    const s = JSON.parse(sv);
+    sb = window.supabase.createClient(SB_URL, SB_KEY);
+    const { data: { user }, error } = await sb.auth.getUser();
+    if (!error && user && user.id === s.uid) { sess = s; role = s.role; await bootApp(); return true; }
+  } catch(e) { console.warn(e); }
+  localStorage.removeItem('qs_sess');
+  return false;
+}
+
+async function doLogout() {
+  try { if (sb) await sb.auth.signOut(); } catch(e) {}
+  localStorage.removeItem('qs_sess');
+  sess = null; role = null; sb = null; cart = []; prods = [];
+  g('app').style.display = 'none';
+  g('loginScreen').style.display = 'flex';
+  g('topbar').style.display = 'none';
+  g('lE').value = ''; g('lP').value = '';
+  g('lM').style.display = 'none';
+}
+
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.ni[data-p]').forEach(n => n.classList.remove('on'));
+  const pg = g('p-' + page); if (pg) pg.classList.add('on');
+  const ni = document.querySelector(`.ni[data-p="${page}"]`); if (ni) ni.classList.add('on');
+  closeNav();
+  if (page==='dashboard')  loadDash();
+  if (page==='pos')        { renderProds(); renderCart(); }
+  if (page==='sales')      loadSales();
+  if (page==='inventory')  { loadInv(); loadStockHistory(); populateStockDropdown(); }
+  if (page==='expenses')   loadExp();
+  if (page==='reports')    initReports();
+  if (page==='suppliers')  loadSup();
+  if (page==='staff')      loadStaff();
+  if (page==='settings')   loadSets();
+}
+function openNav()  { g('nav').classList.add('open'); g('nOverlay').classList.add('open'); }
+function closeNav() { g('nav').classList.remove('open'); g('nOverlay').classList.remove('open'); }
+
+async function loadDash() {
+  if (!sb) return;
+  const t0 = new Date(); t0.setHours(0,0,0,0);
+  const m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  g('dSub').textContent = bizN() + ' · ' + new Date().toLocaleDateString('en-UG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  try {
+    const [r1,r2,r3,r4] = await Promise.all([
+      sb.from('sales').select('total').gte('sale_date', t0.toISOString()),
+      sb.from('products').select('stock,low_stock_alert'),
+      sb.from('expenses').select('amount,category,period_type,creator_name').gte('expense_date', m0.toISOString().split('T')[0]),
+      sb.from('sales').select('total,cost_at_sale,qty').gte('sale_date', m0.toISOString())
+    ]);
+    const rev = (r1.data||[]).reduce((s,r)=>s+(r.total||0),0);
+    const low = (r2.data||[]).filter(p=>p.stock<=(p.low_stock_alert||5)).length;
+    const nowD = new Date();
+    const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth()+1, 0).getDate();
+    const daysSoFar   = nowD.getDate();
+    const expT = (r3.data||[]).reduce((s,e) => {
+      const a = e.amount||0;
+      switch(e.period_type) { case 'daily': return s+a*daysSoFar; case 'weekly': return s+(a/7)*daysSoFar; case 'monthly': return s+(a/daysInMonth)*daysSoFar; case 'annual': return s+(a/365)*daysSoFar; default: return s+a; }
+    }, 0);
+    const moR = (r4.data||[]).reduce((s,r)=>s+(r.total||0),0);
+    const moCOGS = (r4.data||[]).reduce((s,r)=>s+((r.cost_at_sale||0)*(r.qty||1)),0);
+    const grossProfit = moR - moCOGS;
+    const prof = grossProfit - expT;
+    const marg = moR>0 ? ((prof/moR)*100).toFixed(1) : '0.0';
+    g('kR').textContent = fmt(rev); g('kT').textContent = r1.data?.length||0; g('kS').textContent = low; g('kE').textContent = fmt(expT);
+    const expData = r3.data || [];
+    if (!expData.length) { g('expDashStrip').innerHTML = '<span style="color:var(--snow4);font-size:13px">No expenses recorded this month.</span>'; }
+    else {
+      const cats = {};
+      expData.forEach(e => { cats[e.category] = (cats[e.category]||0) + (e.amount||0); });
+      g('expDashStrip').innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:10px">' + Object.entries(cats).map(([cat,amt]) => `<div class="pi" style="min-width:130px"><div class="pl">${esc(cat)}</div><div class="pv g">${fmt(amt)}</div></div>`).join('') + '</div>';
+    }
+    if (role === 'admin') {
+      g('pCard').style.display = 'block';
+      g('pStrip').innerHTML = `<div class="pi"><div class="pl">Revenue</div><div class="pv g">${fmt(moR)}</div></div><div class="pi"><div class="pl">Cost of Goods</div><div class="pv neg">${fmt(moCOGS)}</div></div><div class="pi"><div class="pl">Gross Profit</div><div class="pv ${grossProfit>=0?'pos':'neg'}">${fmt(grossProfit)}</div></div><div class="pi"><div class="pl">Expenses (apportioned)</div><div class="pv neg">${fmt(expT)}</div></div><div class="pi"><div class="pl">Net Profit/Loss</div><div class="pv ${prof>=0?'pos':'neg'}">${fmt(prof)}</div></div><div class="pi"><div class="pl">Net Margin</div><div class="pv g">${marg}%</div></div>`;
+    } else { g('pCard').style.display = 'none'; }
+  } catch(e) { console.error(e); }
+}
+
+async function loadProds() {
+  if (!sb) return;
+  const { data } = await sb.from('products').select('*').order('name');
+  if (data) { prods = data; renderProds(); }
+}
+
+function renderProds() {
+  const q = (g('posQ')?.value||'').toLowerCase();
+  const c = cur();
+  const list = q ? prods.filter(p=>p.name.toLowerCase().includes(q)) : prods;
+  const grid = g('pGrid');
+  if (!grid) return;
+  if (!list.length) { grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--snow4)">No products found</div>'; return; }
+  grid.innerHTML = list.map(p => {
+    const d = JSON.stringify({id:p.id,name:p.name,price:p.price,stock:p.stock,unit:p.unit||'',cost_price:p.cost_price||0});
+    const unitLabel = p.unit ? ` ${p.unit}` : '';
+    return `<div class="ptile ${p.stock<=0?'oos':''}" onclick='addToCart(${d})'><div class="pe">📦</div><div class="pn">${esc(p.name)}</div><div class="pp">${c} ${Number(p.price).toLocaleString()}</div><div class="pst">${p.stock<=0?'Out of stock':'Stock: '+p.stock+unitLabel}</div>${isM()&&p.cost_price?`<div class="pst">Cost: ${c} ${Number(p.cost_price).toLocaleString()}</div>`:''}</div>`;
+  }).join('');
+}
+
+function addToCart(p) {
+  const ex = cart.find(i=>i.id===p.id);
+  if (ex) { if (ex.qty+1>p.stock) { toast('Not enough stock','e'); return; } ex.qty++; }
+  else cart.push({...p, qty:1, actualPrice: p.price, cost_price: p.cost_price||0});
+  renderCart();
+}
+
+function updatePrice(i, val) { const v = parseFloat(val); if (!isNaN(v) && v >= 0) { cart[i].actualPrice = v; } recalcTotal(); }
+
+function recalcTotal() {
+  const tv = g('cTotal'); if (!tv) return;
+  tv.textContent = cur() + ' ' + cart.reduce((s,it) => s + (it.actualPrice||it.price) * it.qty, 0).toLocaleString();
+}
+
+function renderCart() {
+  const bd = g('cartBd'); const tv = g('cTotal');
+  if (!bd) return;
+  const c = cur();
+  if (!cart.length) { bd.innerHTML = '<div class="cart-empty">Cart is empty</div>'; if (tv) tv.textContent = '0'; return; }
+  let total = 0;
+  bd.innerHTML = cart.map((it,i) => {
+    const actualP = it.actualPrice !== undefined ? it.actualPrice : it.price;
+    const lineTotal = actualP * it.qty;
+    total += lineTotal;
+    const unitLabel = it.unit ? ' '+it.unit : '';
+    const priceChanged = actualP !== it.price;
+    return `<div class="crow"><div class="crow-info"><div class="crow-n">${esc(it.name)}</div><div class="crow-price-row"><input class="price-edit" type="number" value="${actualP}" min="0" onchange="updatePrice(${i},this.value)" oninput="updatePrice(${i},this.value)" title="Edit actual selling price">${priceChanged?`<span class="price-was">${c} ${Number(it.price).toLocaleString()}</span>`:''}<span class="price-label">× ${it.qty}${unitLabel}</span></div></div><div class="qw"><button class="qb" onclick="adjQ(${i},-1)">−</button><span class="qn">${it.qty}</span><button class="qb" onclick="adjQ(${i},1)">+</button></div><div class="crow-t">${c} ${lineTotal.toLocaleString()}</div></div>`;
+  }).join('');
+  if (tv) tv.textContent = c + ' ' + total.toLocaleString();
+}
+
+function adjQ(i,d) {
+  if (!cart[i]) return;
+  const nq = cart[i].qty + d;
+  if (nq<1) cart.splice(i,1);
+  else if (nq<=cart[i].stock) cart[i].qty=nq;
+  else toast('Not enough stock','e');
+  renderCart();
+}
+
+function clearCart() { cart=[]; renderCart(); }
+
+const OQ_KEY = 'qs_offline_queue';
+function getQueue() { try { return JSON.parse(localStorage.getItem(OQ_KEY)||'[]'); } catch(e){ return []; } }
+function saveQueue(q) { localStorage.setItem(OQ_KEY, JSON.stringify(q)); }
+function updatePendingBadge() {
+  const q = getQueue();
+  const btn = document.getElementById('syncBtn');
+  if (btn) btn.textContent = q.length > 0 ? `↑ Sync (${q.length} pending)` : '↑ Synced';
+  btn && (btn.style.color = q.length > 0 ? 'var(--amber)' : 'var(--green)');
+}
+async function syncQueue() {
+  if (!sb || !sess) { toast('Not connected','e'); return; }
+  const q = getQueue();
+  if (!q.length) { toast('Nothing to sync','i'); return; }
+  let synced = 0, failed = 0;
+  for (const rows of q) {
+    try { const { error } = await sb.from('sales').insert(rows); if (error) throw error; synced++; }
+    catch(e) { failed++; console.error('Sync failed:', e.message); }
+  }
+  saveQueue([]); updatePendingBadge();
+  toast(`Synced ${synced} sale(s)${failed?' · '+failed+' failed':''}`, synced?'s':'e');
+  if (synced) { loadProds(); loadInv(); loadDash(); loadSales(); }
+}
+
+window.addEventListener('online', () => {
+  g('ofl').style.display='none'; g('cDot').classList.remove('off'); g('cLbl').textContent='Connected';
+  const q = getQueue();
+  if (q.length) { toast(`Back online — syncing ${q.length} pending sale(s)…`,'i'); setTimeout(syncQueue, 1500); }
+});
+
+async function checkout() {
+  if (!cart.length) { toast('Cart is empty','e'); return; }
+  if (!sess) { toast('Not logged in','e'); return; }
+  const rows = cart.map(it => {
+    const actualPrice = it.actualPrice !== undefined ? it.actualPrice : it.price;
+    const costPrice = it.cost_price || 0;
+    return { product_id: it.id, product_name: it.name, qty: it.qty, unit_price: actualPrice, total: actualPrice * it.qty, cost_at_sale: costPrice, user_id: sess.uid, user_name: sess.name, user_role: role, created_by: sess.uid, payment_method: 'cash', sale_date: new Date().toISOString() };
+  });
+  const total = rows.reduce((s,r)=>s+r.total,0);
+  if (!navigator.onLine || !sb) {
+    const q = getQueue(); q.push(rows); saveQueue(q); updatePendingBadge();
+    toast(`Saved offline — will sync when connected (${q.length} pending)`,'i');
+    cart=[]; renderCart(); return;
+  }
+  try {
+    const { error } = await sb.from('sales').insert(rows);
+    if (error) throw error;
+    toast('Sale complete! ' + fmt(total), 's');
+    cart=[]; renderCart(); loadProds(); loadInv(); loadDash(); loadSales();
+  } catch(e) {
+    if (e.message && (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed'))) {
+      const q = getQueue(); q.push(rows); saveQueue(q); updatePendingBadge();
+      toast(`Network error — sale saved offline (${q.length} pending)`,'i');
+      cart=[]; renderCart();
+    } else { toast('Checkout failed: '+e.message,'e'); }
+  }
+}
+
+function switchInvTab(tab) {
+  g('invPanel-products').style.display = tab==='products' ? 'block' : 'none';
+  g('invPanel-stock').style.display    = tab==='stock'    ? 'block' : 'none';
+  g('invTab-products').classList.toggle('on', tab==='products');
+  g('invTab-stock').classList.toggle('on', tab==='stock');
+  if (tab==='stock') { populateStockDropdown(); loadStockHistory(); populateSupplierDropdown(); }
+}
+
+async function addProduct() {
+  if (!isM()) { toast('Managers only','e'); return; }
+  const name = g('prodName').value.trim(), unit = g('prodUnit').value, cat = g('prodCat').value.trim();
+  if (!name) { toast('Product name required','e'); return; }
+  if (!unit) { toast('Unit of measure required','e'); return; }
+  try {
+    const { error } = await sb.from('products').insert({ name, unit, price: 0, category: cat||null, stock: 0, cost_price: 0 });
+    if (error) throw error;
+    toast('Product added: ' + name, 's');
+    g('prodName').value=''; g('prodUnit').value=''; g('prodCat').value='';
+    await loadProds(); loadInv();
+  } catch(e) { toast('Error: '+e.message,'e'); }
+}
+
+async function deleteProduct(id, name) {
+  if (!isM()) { toast('Managers only','e'); return; }
+  if (!confirm('Delete "' + name + '"?\n\nThis cannot be undone.')) return;
+  try {
+    const { error } = await sb.from('products').delete().eq('id', id);
+    if (error) throw error;
+    toast('Product deleted: ' + name, 's');
+    await loadProds(); await loadInv();
+  } catch(e) { toast('Delete failed: ' + e.message, 'e'); }
+}
+
+async function loadInv() {
+  if (!sb) return;
+  const c = cur();
+  const cth = g('cTh'); if (cth) cth.style.display = isM() ? 'table-cell' : 'none';
+  const ath = g('actTh'); if (ath) ath.style.display = isM() ? 'table-cell' : 'none';
+  const apc = g('addProdCard'); if (apc) apc.style.display = isM() ? 'block' : 'none';
+  const { data } = await sb.from('products').select('*').order('name');
+  prods = data || [];
+  const b = g('iBody'); if (!b) return;
+  if (!prods.length) { b.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--snow4)">No products yet</td></tr>`; return; }
+  b.innerHTML = prods.map(p => {
+    const alertThresh = p.low_stock_alert || 5;
+    let cl='bg', lb='In Stock';
+    if (p.stock<=0) { cl='br'; lb='Out of Stock'; } else if (p.stock<=alertThresh) { cl='ba'; lb='Low Stock'; }
+    return `<tr><td><strong>${esc(p.name)}</strong></td><td><span class="badge bd">${esc(p.unit||'—')}</span></td><td class="mono">${c} ${Number(p.price).toLocaleString()}</td>${isM()?`<td class="mono">${c} ${Number(p.cost_price||0).toLocaleString()}</td>`:''}<td class="mono">${p.stock}</td><td><span style="font-size:11px;color:var(--amber)">${alertThresh}</span></td><td><span class="badge ${cl}">${lb}</span></td>${isM()?`<td><button class="btn-danger" onclick="deleteProduct('${p.id}','${esc(p.name).replace(/'/g,"\\'")}')">Delete</button></td>`:''}</tr>`;
+  }).join('');
+}
+
+function populateStockDropdown() {
+  const sel = g('stkProd'); if (!sel) return;
+  sel.innerHTML = '<option value="">Select product…</option>' +
+    prods.map(p=>`<option value="${p.id}" data-unit="${esc(p.unit||'')}" data-stock="${p.stock}" data-price="${p.price}">${esc(p.name)}</option>`).join('');
+}
+
+function onStockProductChange() {
+  const sel = g('stkProd'), opt = sel.options[sel.selectedIndex];
+  g('stkUnit').value = opt?.dataset?.unit || '';
+  g('stkPrev').value = opt?.dataset?.stock || '';
+  const prod = prods.find(p=>p.id==sel.value);
+  if (prod) { if (prod.low_stock_alert) g('stkAlert').value = prod.low_stock_alert; if (prod.price) g('stkSellPrice').value = prod.price; }
+  else { g('stkAlert').value = ''; g('stkSellPrice').value = ''; }
+}
+
+async function addStock() {
+  if (!isM()) { toast('Managers only','e'); return; }
+  const prodId = g('stkProd').value, qty = parseInt(g('stkQty').value)||0;
+  const buyP = parseFloat(g('stkBuy').value), sellP = parseFloat(g('stkSellPrice').value);
+  const supName = g('stkSup').value||'', invNum = g('stkInv').value.trim(), alert = parseInt(g('stkAlert').value)||0;
+  if (!prodId) { toast('Select a product','e'); return; }
+  if (qty <= 0) { toast('Enter a valid quantity','e'); return; }
+  if (isNaN(buyP)||buyP<=0) { toast('Buying price is required','e'); return; }
+  if (isNaN(sellP)||sellP<=0) { toast('Selling price is required','e'); return; }
+  const prod = prods.find(p=>p.id==prodId);
+  if (!prod) { toast('Product not found','e'); return; }
+  const newStock = (prod.stock||0) + qty;
+  try {
+    const updateData = { stock: newStock, cost_price: buyP, price: sellP };
+    if (alert > 0) updateData.low_stock_alert = alert;
+    const { error: ue } = await sb.from('products').update(updateData).eq('id', prodId);
+    if (ue) throw ue;
+    await sb.from('stock_entries').insert({ product_id: prodId, product_name: prod.name, unit: prod.unit||'', qty_added: qty, buying_price: buyP, supplier: supName||null, invoice_no: invNum||null, prev_stock: prod.stock||0, new_stock: newStock, added_by: sess?.uid||null, added_by_name: sess?.name||null, stock_date: new Date().toISOString() }).then(r => { if (r.error) console.warn('stock_entries:', r.error.message); });
+    toast(`Stock saved: ${prod.name} → ${newStock} ${prod.unit||''}`, 's');
+    g('stkProd').value=''; g('stkQty').value=''; g('stkBuy').value=''; g('stkSellPrice').value=''; g('stkSup').value=''; g('stkInv').value=''; g('stkAlert').value=''; g('stkUnit').value=''; g('stkPrev').value='';
+    await loadProds(); loadInv(); loadStockHistory(); populateSupplierDropdown();
+  } catch(e) { toast('Error: '+e.message,'e'); }
+}
+
+async function loadStockHistory() {
+  if (!sb) return;
+  const b = g('stkBody'); if (!b) return;
+  const { data, error } = await sb.from('stock_entries').select('*').order('stock_date',{ascending:false}).limit(100);
+  if (error) { b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--snow4)">No stock history yet</td></tr>'; return; }
+  b.innerHTML = (data||[]).map(s=>`<tr><td class="mono">${new Date(s.stock_date).toLocaleDateString()}</td><td><strong>${esc(s.product_name)}</strong></td><td><span class="badge bd">${esc(s.unit||'—')}</span></td><td class="mono">+${s.qty_added}</td><td class="mono">${s.buying_price?fmt(s.buying_price):'—'}</td><td>${esc(s.supplier||'—')}</td><td class="mono">${esc(s.invoice_no||'—')}</td></tr>`).join('') ||
+    '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--snow4)">No stock entries</td></tr>';
+}
+
+async function addExpense() {
+  if (!sb||!sess) { toast('Not connected','e'); return; }
+  const dateVal = g('expDate').value, cat = g('expCat').value, desc = g('expDesc').value.trim(), amt = parseFloat(g('expAmt').value)||0, period = g('expPeriod').value;
+  if (!dateVal) { toast('Select expense date','e'); return; }
+  if (!cat) { toast('Select a category','e'); return; }
+  if (!desc) { toast('Add a description','e'); return; }
+  if (amt<=0) { toast('Enter a valid amount','e'); return; }
+  try {
+    const { error } = await sb.from('expenses').insert({ expense_date: dateVal, category: cat, description: desc, amount: amt, period_type: period, created_by: sess.uid, creator_name: sess.name, user_id: sess.uid });
+    if (error) throw error;
+    toast('Expense recorded','s');
+    g('expDate').value=''; g('expCat').value=''; g('expDesc').value=''; g('expAmt').value=''; g('expPeriod').value='monthly';
+    loadExp(); loadDash();
+  } catch(e) { toast('Error: '+e.message,'e'); }
+}
+
+async function loadExp() {
+  if (!sb) return;
+  let query = sb.from('expenses').select('*').order('expense_date',{ascending:false}).limit(200);
+  if (!isM()) query = query.eq('created_by', sess.uid);
+  const { data } = await query;
+  const b = g('eBody'); if (!b) return;
+  const title = g('expTableTitle');
+  if (title) title.textContent = isM() ? 'All Expenses' : 'My Expenses';
+  b.innerHTML = (data||[]).map(e=>`<tr><td class="mono">${new Date(e.expense_date).toLocaleDateString()}</td><td>${esc(e.category)}</td><td>${esc(e.description||'—')}</td><td class="mono">${fmt(e.amount)}</td><td><span class="badge bd">${esc(e.period_type||'—')}</span></td><td style="color:var(--snow3)">${esc(e.creator_name||'—')}</td></tr>`).join('') ||
+  '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--snow4)">No expenses yet</td></tr>';
+}
+
+function initReports() {
+  const now = new Date(), m0 = new Date(now.getFullYear(), now.getMonth(), 1);
+  const fmt8 = d => d.toISOString().split('T')[0];
+  if (g('repFrom') && !g('repFrom').value) g('repFrom').value = fmt8(m0);
+  if (g('repTo')   && !g('repTo').value)   g('repTo').value   = fmt8(now);
+  const note = g('repRoleNote'); if (note) note.textContent = isM() ? 'Manager view — full access' : 'Your sales & expenses only';
+  const plSec = g('plSection'); if (plSec) plSec.style.display = role==='admin' ? 'block' : 'none';
+  const plKpi = g('repPLKpi');  if (plKpi) plKpi.style.display = role==='admin' ? 'block' : 'none';
+  runReport();
+}
+
+async function runReport() {
+  if (!sb) return;
+  const from = g('repFrom')?.value, to = g('repTo')?.value;
+  if (!from || !to) { toast('Select date range','e'); return; }
+  const toEnd = to + 'T23:59:59';
+  try {
+    let salesQ = sb.from('sales').select('*').gte('sale_date',from+'T00:00:00').lte('sale_date',toEnd).order('sale_date',{ascending:false});
+    if (!isM()) salesQ = salesQ.eq('user_id', sess.uid);
+    const { data: salesData } = await salesQ;
+    let expQ = sb.from('expenses').select('*').gte('expense_date',from).lte('expense_date',to).order('expense_date',{ascending:false});
+    if (!isM()) expQ = expQ.eq('created_by', sess.uid);
+    const { data: expData } = await expQ;
+    const totalSales = (salesData||[]).reduce((s,r)=>s+(r.total||0),0);
+    const totalCOGS  = (salesData||[]).reduce((s,r)=>s+((r.cost_at_sale||0)*(r.qty||1)),0);
+    const grossProfit = totalSales - totalCOGS;
+    const fromD = new Date(from), toD = new Date(to);
+    const daysInRange = Math.max(1, Math.round((toD - fromD) / (1000*60*60*24)) + 1);
+    const totalExp = (expData||[]).reduce((s,e) => {
+      const a = e.amount||0;
+      switch(e.period_type) { case 'daily': return s+a*daysInRange; case 'weekly': return s+(a/7)*daysInRange; case 'monthly': return s+(a/30)*daysInRange; case 'annual': return s+(a/365)*daysInRange; default: return s+a; }
+    }, 0);
+    const netPL = grossProfit - totalExp;
+    lastReportData = { from, to, salesData: salesData||[], expData: expData||[], totalSales, totalCOGS, grossProfit, totalExp, netPL, daysInRange };
+    g('repSales').textContent = fmt(totalSales);
+    g('repExp').textContent   = fmt(totalExp);
+    if (role === 'admin') {
+      const plEl = g('repPL');
+      if (plEl) { plEl.textContent = fmt(Math.abs(netPL)); plEl.className='kv '+(netPL>=0?'pos':'neg'); }
+      const plSec = g('plSection');
+      if (plSec) {
+        const marg = totalSales>0 ? ((netPL/totalSales)*100).toFixed(1) : '0.0';
+        g('plStrip').innerHTML = `<div class="pi"><div class="pl">Revenue</div><div class="pv g">${fmt(totalSales)}</div></div><div class="pi"><div class="pl">Cost of Goods Sold</div><div class="pv neg">${fmt(totalCOGS)}</div></div><div class="pi"><div class="pl">Gross Profit</div><div class="pv ${grossProfit>=0?'pos':'neg'}">${fmt(grossProfit)}</div></div><div class="pi"><div class="pl">Expenses (${daysInRange}d apportioned)</div><div class="pv neg">${fmt(totalExp)}</div></div><div class="pi"><div class="pl">Net Profit/Loss</div><div class="pv ${netPL>=0?'pos':'neg'}">${fmt(netPL)}</div></div><div class="pi"><div class="pl">Net Margin</div><div class="pv g">${marg}%</div></div>`;
+      }
+    }
+    const sb2 = g('repSalesBody');
+    if (sb2) sb2.innerHTML = (salesData||[]).map(s=>`<tr><td class="mono">${new Date(s.sale_date).toLocaleDateString()}</td><td>${esc(s.product_name)}</td><td>${s.qty}</td><td class="mono">${fmt(s.total)}</td><td style="color:var(--snow3)">${esc(s.user_name||'—')}</td></tr>`).join('') ||
+      '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--snow4)">No sales in this period</td></tr>';
+    const eb = g('repExpBody');
+    if (eb) eb.innerHTML = (expData||[]).map(e=>`<tr><td class="mono">${new Date(e.expense_date).toLocaleDateString()}</td><td>${esc(e.category)}</td><td>${esc(e.description||'—')}</td><td class="mono">${fmt(e.amount)}</td><td><span class="badge bd">${esc(e.period_type||'—')}</span></td><td style="color:var(--snow3)">${esc(e.creator_name||'—')}</td></tr>`).join('') ||
+      '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--snow4)">No expenses in this period</td></tr>';
+  } catch(e) { toast('Report error: '+e.message,'e'); console.error(e); }
+}
+
+function exportPDF() {
+  const d = lastReportData;
+  if (!d.salesData.length && !d.expData.length) { toast('Generate a report first','e'); return; }
+  const marg = d.totalSales>0 ? ((d.netPL/d.totalSales)*100).toFixed(1) : '0.0';
+  const plRows = role==='admin' ? `<div class="pr-kpi"><div class="pr-kpi-l">Revenue</div><div class="pr-kpi-v">${fmt(d.totalSales)}</div></div><div class="pr-kpi"><div class="pr-kpi-l">Cost of Goods</div><div class="pr-kpi-v">${fmt(d.totalCOGS||0)}</div></div><div class="pr-kpi"><div class="pr-kpi-l">Gross Profit</div><div class="pr-kpi-v ${(d.grossProfit||0)>=0?'pos':'neg'}">${fmt(d.grossProfit||0)}</div></div><div class="pr-kpi"><div class="pr-kpi-l">Expenses (${d.daysInRange||0}d apportioned)</div><div class="pr-kpi-v">${fmt(d.totalExp)}</div></div><div class="pr-kpi"><div class="pr-kpi-l">Net P/L</div><div class="pr-kpi-v ${d.netPL>=0?'pos':'neg'}">${fmt(d.netPL)}</div></div><div class="pr-kpi"><div class="pr-kpi-l">Net Margin</div><div class="pr-kpi-v">${marg}%</div></div>` : '';
+  const salesRows = d.salesData.map(s=>`<tr><td>${new Date(s.sale_date).toLocaleDateString()}</td><td>${esc(s.product_name)}</td><td>${s.qty}</td><td>${fmt(s.total)}</td><td>${esc(s.user_name||'—')}</td></tr>`).join('') || '<tr><td colspan="5" style="color:#aaa">No sales in period</td></tr>';
+  const expRows = d.expData.map(e=>`<tr><td>${new Date(e.expense_date).toLocaleDateString()}</td><td>${esc(e.category)}</td><td>${esc(e.description||'—')}</td><td>${fmt(e.amount)}</td><td>${esc(e.period_type||'—')}</td><td>${esc(e.creator_name||'—')}</td></tr>`).join('') || '<tr><td colspan="6" style="color:#aaa">No expenses in period</td></tr>';
+  g('printArea').innerHTML = `<h2>${esc(bizN())} — Report</h2><div class="pr-meta">Period: ${d.from} to ${d.to} &nbsp;·&nbsp; Generated: ${new Date().toLocaleString()} &nbsp;·&nbsp; By: ${esc(sess?.name||'')}</div><div class="pr-kpis"><div class="pr-kpi"><div class="pr-kpi-l">Total Sales</div><div class="pr-kpi-v">${fmt(d.totalSales)}</div></div><div class="pr-kpi"><div class="pr-kpi-l">Total Expenses</div><div class="pr-kpi-v">${fmt(d.totalExp)}</div></div>${plRows}</div><div class="pr-sec"><div class="pr-sec-title">Sales in Period</div><table><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th><th>By</th></tr></thead><tbody>${salesRows}</tbody></table></div><div class="pr-sec"><div class="pr-sec-title">Expenses in Period</div><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Period</th><th>By</th></tr></thead><tbody>${expRows}</tbody></table></div><div class="pr-footer">${esc(bizN())} · QuantumServe Core ERP · Confidential</div>`;
+  setTimeout(() => window.print(), 100);
+}
+
+async function loadSales() {
+  if (!sb) return;
+  const c = cur();
+  const { data } = await sb.from('sales').select('*').order('sale_date',{ascending:false}).limit(200);
+  const b = g('sBody'); if (!b) return;
+  b.innerHTML = (data||[]).map(s=>`<tr><td class="mono">${new Date(s.sale_date).toLocaleString()}</td><td>${esc(s.product_name)}</td><td>${s.qty}</td><td class="mono">${c} ${Number(s.total).toLocaleString()}</td></tr>`).join('') ||
+    '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--snow4)">No sales yet</td></tr>';
+}
+
+async function loadSup() {
+  if (!sb) return;
+  const b = g('supB'); if (!b) return;
+  const { data, error } = await sb.from('stock_entries').select('supplier,product_name,buying_price,qty_added,stock_date').not('supplier','is',null).order('stock_date',{ascending:false});
+  if (error || !data || !data.length) { b.innerHTML='<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--snow4)">No supplier data yet — add stock entries to populate</td></tr>'; return; }
+  const suppliers = {};
+  data.forEach(e => {
+    const sup = e.supplier; if (!sup) return;
+    if (!suppliers[sup]) suppliers[sup] = { products: new Set(), lastDate: e.stock_date, totalSpent: 0 };
+    suppliers[sup].products.add(e.product_name);
+    suppliers[sup].totalSpent += (e.buying_price||0) * (e.qty_added||0);
+    if (e.stock_date > suppliers[sup].lastDate) suppliers[sup].lastDate = e.stock_date;
+  });
+  b.innerHTML = Object.entries(suppliers).sort((a,b) => b[1].totalSpent - a[1].totalSpent).map(([name, d]) => `<tr><td><strong>${esc(name)}</strong></td><td style="font-size:12px">${[...d.products].map(p=>esc(p)).join(', ')}</td><td class="mono">${new Date(d.lastDate).toLocaleDateString()}</td><td class="mono">${fmt(d.totalSpent)}</td>`).join('');
+}
+
+async function loadStaff() {
+  if (!sb) return;
+  const b = g('stfB'); if (!b) return;
+  if (role!=='admin') { b.innerHTML='<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--snow4)">Administrators only</td>'; return; }
+  const { data } = await sb.from('staff').select('*').order('name');
+  b.innerHTML = (data||[]).map(s=>`<tr><td><strong>${esc(s.name)}</strong></td><td style="color:var(--snow3)">${esc(s.email)}</td><td><span class="badge ${s.role==='admin'?'bg':s.role==='manager'?'ba':'bd'}">${s.role}</span></td><td><span class="badge ${s.is_active?'bg':'br'}">${s.is_active?'Active':'Inactive'}</span></td>`).join('') ||
+  '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--snow4)">No staff</td>';
+}
+
+async function populateSupplierDropdown() {
+  const sel = g('stkSup'); if (!sel) return;
+  const { data } = await sb.from('stock_entries').select('supplier').not('supplier','is',null).order('supplier');
+  const unique = [...new Set((data||[]).map(r=>r.supplier).filter(Boolean))];
+  sel.innerHTML = '<option value="">Select supplier…</option>' + unique.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+function showAddSupplierModal() {
+  const m = g('addSupModal'); if (m) { m.style.display='flex'; }
+  setTimeout(()=>{ const n=g('newSupName'); if(n) n.focus(); },100);
+}
+
+function hideAddSupplierModal() {
+  const m = g('addSupModal'); if (m) m.style.display='none';
+  const n = g('newSupName'); if(n) n.value='';
+}
+
+async function saveNewSupplier() {
+  const name = g('newSupName')?.value?.trim();
+  if (!name) { toast('Enter supplier name','e'); return; }
+  const sel = g('stkSup');
+  if (sel) {
+    const exists = Array.from(sel.options).some(o=>o.value===name);
+    if (!exists) { const opt = document.createElement('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt); }
+    sel.value = name;
+  }
+  hideAddSupplierModal();
+  toast('Supplier added: '+name,'s');
+}
+
+function loadSets() {
+  const b=g('sBiz'),c=g('sCur');
+  if(b) b.value=localStorage.getItem('qs_biz')||'';
+  if(c) c.value=cur();
+  if(g('sUser')&&sess) g('sUser').textContent=sess.name+' · '+sess.email+' · '+sess.role;
+}
+function saveSets() {
+  const b=g('sBiz')?.value?.trim(), c=g('sCur')?.value;
+  if(b){localStorage.setItem('qs_biz',b);g('nBizN').textContent=b;}
+  if(c) localStorage.setItem('qs_cur',c);
+  toast('Settings saved','s'); loadDash();
+}
+
+window.addEventListener('online',  ()=>{ g('ofl').style.display='none';  g('cDot').classList.remove('off'); g('cLbl').textContent='Connected'; });
+window.addEventListener('offline', ()=>{ g('ofl').style.display='block'; g('cDot').classList.add('off');    g('cLbl').textContent='Offline'; });
+if (!navigator.onLine) { g('cDot').classList.add('off'); g('cLbl').textContent='Offline'; }
+
+window.addEventListener('DOMContentLoaded', () => {
+  g('lB').addEventListener('click', doLogin);
+  g('lP').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  g('lE').addEventListener('keydown', e=>{ if(e.key==='Enter') g('lP').focus(); });
+  document.querySelectorAll('.ni[data-p]').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.p)));
+  g('nOut').addEventListener('click', doLogout);
+  g('mBtn').addEventListener('click', openNav);
+  g('nOverlay').addEventListener('click', closeNav);
+  g('nBiz').addEventListener('click', ()=>navTo('settings'));
+  g('posQ').addEventListener('input', renderProds);
+  const today = new Date().toISOString().split('T')[0];
+  if (g('expDate')) g('expDate').value = today;
+  restoreSess();
+  
+  // ✅ UPDATED: Better Service Worker registration with logging for multi-tenant
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('SW registered successfully:', reg);
+    }).catch(err => {
+      console.warn('SW registration failed:', err);
+    });
+  }
+});
+</script>
+</body>
+</html>
